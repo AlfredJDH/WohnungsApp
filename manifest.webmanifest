@@ -1,0 +1,16 @@
+{
+  "name": "Kann ich mir das leisten? – Wohnungsrechner",
+  "short_name": "Wohnungsrechner",
+  "description": "Prüfe, ob Du Dir eine Wohnung leisten kannst: Eigenkapital, Budget, Nebenkosten, Förderung, Steuer, Laufzeit und Sondertilgung – für Eigennutzung oder Vermietung.",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#e9edf0",
+  "theme_color": "#0d6e63",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
