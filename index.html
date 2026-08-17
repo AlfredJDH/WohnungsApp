@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Wohnungskauf-Rechner für Deutschland: Eigenkapital, Budget, Kaufnebenkosten, Förderung und Steuer – für Eigennutzung oder Vermietung. Mit Erklärungen zu allen Fachbegriffen. Läuft offline im Browser.">
+<meta name="description" content="Wohnungskauf-Rechner für Deutschland: Eigenkapital, Budget, Kaufnebenkosten, Förderung und Steuer – für Eigennutzung oder Vermietung. Mit Laufzeit-Rechnung und Grundwissen-Ratgeber. Läuft offline im Browser.">
 <meta name="color-scheme" content="light dark">
 <title>Kann ich mir das leisten? · Wohnungsrechner</title>
 <style>
@@ -238,17 +238,17 @@
   .flag.good .ic{background:var(--good)} .flag.good{border-color:var(--good-soft)}
 
   /* ---------- Info-Buttons „ⓘ" + Popover ---------- */
-  .info{
+  .ibtn{
     -webkit-appearance:none;appearance:none;border:0;padding:0;cursor:pointer;
     display:inline-grid;place-items:center;width:16px;height:16px;margin-left:5px;
     border-radius:50%;background:var(--accent-soft);color:var(--accent-ink);
     font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:700;
     font-size:11px;line-height:1;vertical-align:middle;flex:0 0 auto;transition:background .12s,color .12s;
   }
-  .info:hover{background:var(--accent);color:#fff}
-  .info:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .pill .info{width:15px;height:15px;background:var(--surface);border:1px solid var(--line)}
-  .pill .info:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+  .ibtn:hover{background:var(--accent);color:#fff}
+  .ibtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .pill .ibtn{width:15px;height:15px;background:var(--surface);border:1px solid var(--line)}
+  .pill .ibtn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
 
   .pop{
     position:fixed;z-index:200;max-width:288px;width:max-content;
@@ -266,6 +266,57 @@
   }
   .pop .close:hover{color:var(--ink);background:var(--surface-2)}
   @media (prefers-reduced-motion:reduce){ .pop{transition:none} }
+
+  /* ---------- Laufzeit-Block ---------- */
+  .laufzeit{
+    margin-top:14px;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);box-shadow:var(--shadow);padding:15px 17px 16px;
+  }
+  .laufzeit h3{
+    margin:0 0 10px;font-size:13px;font-weight:750;letter-spacing:-.01em;
+    display:flex;align-items:center;gap:8px;
+  }
+  .laufzeit .lz-row{
+    display:flex;justify-content:space-between;gap:12px;align-items:baseline;
+    font-size:14px;padding:8px 0;border-bottom:1px solid var(--line);
+  }
+  .laufzeit .lz-row:last-of-type{border-bottom:0}
+  .laufzeit .lz-row .k{color:var(--muted)}
+  .laufzeit .lz-row .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  .laufzeit .lz-note{font-size:12.5px;color:var(--muted);line-height:1.5;margin:11px 0 0;
+    padding-top:11px;border-top:1px solid var(--line)}
+  .laufzeit .lz-note b{color:var(--ink)}
+
+  /* ---------- Grundwissen (Akkordeon) ---------- */
+  .knowledge{max-width:820px;margin:26px 0 8px}
+  .knowledge > h2{
+    margin:0 0 4px;font-size:clamp(19px,3vw,23px);font-weight:800;
+    letter-spacing:-.02em;text-wrap:balance;
+  }
+  .knowledge .klead{color:var(--muted);font-size:14px;margin:0 0 16px;max-width:62ch}
+  details.q{
+    border:1px solid var(--line);border-radius:12px;background:var(--surface);
+    box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;
+  }
+  details.q > summary{
+    list-style:none;cursor:pointer;padding:15px 17px;font-weight:700;font-size:15px;
+    line-height:1.35;color:var(--ink);display:flex;align-items:center;gap:12px;
+    transition:background .12s;
+  }
+  details.q > summary::-webkit-details-marker{display:none}
+  details.q > summary::after{
+    content:"+";margin-left:auto;flex:0 0 auto;font-size:22px;font-weight:400;
+    line-height:1;color:var(--accent-ink);transition:transform .15s;
+  }
+  details.q[open] > summary::after{content:"\2013"}
+  details.q > summary:hover{background:var(--surface-2)}
+  details.q > summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+  details.q .a{padding:2px 17px 17px;color:var(--muted);font-size:14px;line-height:1.65}
+  details.q .a p{margin:0 0 10px}
+  details.q .a p:last-child{margin-bottom:0}
+  details.q .a ul{margin:0 0 10px;padding-left:20px}
+  details.q .a li{margin-bottom:6px}
+  details.q .a b{color:var(--ink);font-weight:650}
 
   .disclaimer{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:18px;
     padding-top:14px;border-top:1px solid var(--line)}
@@ -365,6 +416,23 @@
             <div class="inp has-post"><span class="post">%</span>
               <input type="number" id="tilgung" min="0.5" step="0.1" value="2.0" inputmode="decimal"></div>
             <span class="note">Höhere Tilgung = schneller schuldenfrei, aber höhere Rate.</span>
+          </div>
+          <div class="field">
+            <label for="zinsbindung">Zinsbindung</label>
+            <select id="zinsbindung">
+              <option value="5">5 Jahre</option>
+              <option value="10" selected>10 Jahre</option>
+              <option value="15">15 Jahre</option>
+              <option value="20">20 Jahre</option>
+              <option value="30">30 Jahre</option>
+            </select>
+            <span class="note">So lange ist Dein Zins garantiert – danach: Anschlussfinanzierung.</span>
+          </div>
+          <div class="field">
+            <label for="alter">Dein Alter <span class="u">optional</span></label>
+            <div class="inp has-post"><span class="post">J.</span>
+              <input type="number" id="alter" min="18" max="99" step="1" value="" placeholder="z. B. 55" inputmode="numeric"></div>
+            <span class="note">Zeigt, mit welchem Alter Du schuldenfrei wärst.</span>
           </div>
         </div>
       </div>
@@ -486,11 +554,109 @@
         <div class="pills" id="pills"></div>
       </div>
 
+      <div id="laufzeit" class="laufzeit"></div>
+
       <div class="flags" id="flags"></div>
 
       <p class="disclaimer">Grobe Orientierung, keine Steuer- oder Finanzberatung. Zinsen sinken über die Laufzeit (die Rate bleibt, der Zinsanteil fällt) – hier wird das <b>erste Jahr</b> als Momentaufnahme gerechnet. Grunderwerbsteuersätze Stand 2025. Prüfe konkrete Konditionen mit Bank, Steuerberatung und Förderstelle (z. B. KfW).</p>
     </aside>
   </div>
+
+  <section class="knowledge">
+    <h2>Grundwissen – ohne Fachchinesisch erklärt</h2>
+    <p class="klead">Noch nie mit Krediten beschäftigt? Kein Problem. Hier die wichtigsten Begriffe rund ums Baugeld, in Alltagssprache. Tippe auf eine Frage.</p>
+
+    <details class="q">
+      <summary>Wie funktioniert ein Immobilienkredit überhaupt?</summary>
+      <div class="a">
+        <p>Du leihst Dir von der Bank Geld – das <b>Darlehen</b> – und zahlst es in monatlich gleichbleibenden Raten zurück. Jede Rate besteht aus zwei Teilen:</p>
+        <ul>
+          <li><b>Zinsen</b> – die Gebühr dafür, dass Du das Geld leihen darfst.</li>
+          <li><b>Tilgung</b> – die eigentliche Rückzahlung Deiner Schulden.</li>
+        </ul>
+        <p>Am Anfang ist der Zinsanteil groß und die Tilgung klein. Mit jeder Rate sinkt Deine Restschuld – dadurch fallen die Zinsen, und der Tilgungsanteil wächst automatisch. Die Rate bleibt gleich, nur ihre Zusammensetzung verschiebt sich. Diese gleichbleibende Rate nennt man <b>Annuität</b>.</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>Sollzins, Effektivzins – was ist der Unterschied?</summary>
+      <div class="a">
+        <p>Der <b>Sollzins</b> ist der reine Zinssatz fürs Darlehen. Der <b>Effektivzins</b> liegt etwas höher, weil er zusätzliche Kosten der Finanzierung mit einrechnet (z. B. wie oft Zinsen verrechnet werden, Bereitstellungszinsen).</p>
+        <p>Wenn Du Bankangebote vergleichst, ist der Effektivzins die ehrlichere Zahl – vergleiche also immer <b>Effektiv mit Effektiv</b>. Der Rechner hier arbeitet der Einfachheit halber mit dem Sollzins.</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>Zinsbindung oder Laufzeit – und was passiert danach?</summary>
+      <div class="a">
+        <p>Zwei Dinge, die oft verwechselt werden:</p>
+        <ul>
+          <li><b>Zinsbindung</b> – so lange garantiert Dir die Bank Deinen Zinssatz. Üblich sind 5, 10, 15 oder 20 Jahre. In dieser Zeit ändert sich Deine Rate nicht.</li>
+          <li><b>Gesamtlaufzeit</b> – so lange dauert es, bis die Schuld ganz getilgt ist. Hängt von Darlehen, Zins und Tilgung ab und ist oft 25–35 Jahre – also länger als die Zinsbindung.</li>
+        </ul>
+        <p>Ist die Zinsbindung vorbei und noch Restschuld offen, brauchst Du eine <b>Anschlussfinanzierung</b>: ein neues Darlehen für den Rest, zu den dann gültigen Zinsen (die höher oder niedriger sein können).</p>
+        <p>Gut zu wissen: Nach 10 Jahren darfst Du jedes Darlehen mit 6 Monaten Frist kündigen oder umschulden – <b>auch bei längerer Zinsbindung</b> (§ 489 BGB). Eine lange Zinsbindung gibt Dir also Sicherheit, ohne Dich für immer zu fesseln.</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>„Ich bin älter – bekomme ich überhaupt noch einen Kredit?"</summary>
+      <div class="a">
+        <p><b>Ja.</b> Es gibt <b>keine gesetzliche Altersgrenze</b> für einen Immobilienkredit – und die Zinsbindung ist nicht auf 10 Jahre begrenzt, nur weil Du älter bist. Banken achten aber auf zwei Dinge:</p>
+        <ul>
+          <li><b>Ist die Rate im Ruhestand tragbar?</b> Deine Rente (plus evtl. Mieteinnahmen) sollte die Rate stemmen. Deshalb finanzieren Banken bei älteren Kundinnen und Kunden gern so, dass der Kredit bis oder kurz nach dem Renteneintritt weitgehend abbezahlt ist.</li>
+          <li><b>Sicherheit über die Immobilie:</b> Die Wohnung dient als Pfand. Ist viel Eigenkapital da (niedrige Beleihung), sind Banken auch bei höherem Alter entspannt.</li>
+        </ul>
+        <p>In der Praxis heißt das oft: <b>höhere Tilgung</b> (damit Du schneller schuldenfrei bist), <b>mehr Eigenkapital</b> oder eine kürzere Laufzeit – nicht zwingend „nur 10 Jahre". Tipp: Trag oben Dein Alter ein und stell die Tilgung höher (z. B. 3–5 %) – Du siehst sofort, mit welchem Alter Du durch wärst.</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>Was bedeutet Tilgung – und was ist eine Sondertilgung?</summary>
+      <div class="a">
+        <p>Die <b>Tilgung</b> bestimmt Dein Tempo: 2 % anfängliche Tilgung ist langsam (oft 30+ Jahre), 4–5 % deutlich schneller. Höhere Tilgung bedeutet höhere Monatsrate, aber viel weniger Zinsen insgesamt und früher schuldenfrei.</p>
+        <p>Viele Verträge erlauben zusätzlich <b>Sondertilgungen</b> – freiwillige Extrazahlungen (z. B. aus Bonus, Ersparnissen oder Erbe), die direkt die Restschuld senken. Achte beim Vertrag darauf, dass kostenlose Sondertilgungen erlaubt sind (oft bis 5 % pro Jahr).</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>KfW, Förderung, Zuschuss – was ist das?</summary>
+      <div class="a">
+        <p>Die <b>KfW</b> (Kreditanstalt für Wiederaufbau) ist eine staatliche Förderbank. Sie vergibt – meist über Deine Hausbank – <b>zinsgünstige Darlehen</b> und teils <b>Zuschüsse</b>, etwa für energieeffizientes Bauen und Sanieren oder Wohneigentum für Familien.</p>
+        <p>Der Vorteil: Der Zins liegt unter dem normalen Marktniveau, und ein Zuschuss muss gar nicht zurückgezahlt werden. Daneben gibt es <b>Länder- und Kommunalförderungen</b> (je nach Bundesland/Stadt sehr unterschiedlich) und für Selbstnutzer die <b>Riester-Förderung</b> („Wohn-Riester").</p>
+        <p>Programme und Konditionen ändern sich laufend – aktuelle Infos direkt bei der KfW (kfw.de), Deinem Bundesland oder Deiner Bank.</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>Warum senkt mehr Eigenkapital den Zins? (Beleihung)</summary>
+      <div class="a">
+        <p>Die <b>Beleihung</b> ist der Anteil des Kaufpreises, den Du über Kredit finanzierst. Je mehr Eigenkapital Du einbringst, desto niedriger die Beleihung – und desto weniger Risiko für die Bank, falls sie die Immobilie einmal verwerten müsste.</p>
+        <p>Deshalb belohnen Banken hohes Eigenkapital mit <b>besseren Zinsen</b>. Faustregeln: Die Kaufnebenkosten solltest Du in jedem Fall aus Eigenkapital zahlen; darüber hinaus gelten rund <b>20 % Eigenkapital</b> vom Kaufpreis als solide.</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>Kaufnebenkosten – die ~10–15 %, die viele vergessen</summary>
+      <div class="a">
+        <p>Zum Kaufpreis kommen Kosten, die Banken meist <b>nicht</b> mitfinanzieren:</p>
+        <ul>
+          <li><b>Grunderwerbsteuer</b> – 3,5 bis 6,5 % je Bundesland.</li>
+          <li><b>Notar &amp; Grundbuch</b> – zusammen rund 2 %.</li>
+          <li><b>Maklerprovision</b> – falls ein Makler vermittelt, oft ~3,57 %.</li>
+        </ul>
+        <p>Zusammen schnell <b>10–15 % des Kaufpreises</b> – Geld, das Du zusätzlich zum Eigenkapital für die Anzahlung bereithalten musst.</p>
+      </div>
+    </details>
+
+    <details class="q">
+      <summary>Selbst wohnen oder vermieten – der steuerliche Unterschied</summary>
+      <div class="a">
+        <p><b>Eigennutzung:</b> Du zahlst die Rate aus versteuertem Einkommen; die Zinsen sind steuerlich <b>nicht</b> absetzbar. Dafür ist ein späterer Verkaufsgewinn steuerfrei (bei durchgehender Eigennutzung).</p>
+        <p><b>Vermietung:</b> Die Miete ist Einnahme, aber <b>Zinsen, Abschreibung (AfA) und Kosten mindern Deine Steuer</b> – in den ersten Jahren entsteht oft sogar ein steuerlicher Verlust, der Deine Steuerlast senkt. Ein Verkaufsgewinn ist erst <b>nach 10 Jahren</b> Haltedauer steuerfrei.</p>
+      </div>
+    </details>
+  </section>
 </main>
 
 <footer>
@@ -550,11 +716,29 @@
     grundanteil: { t: "Grundstücksanteil", d: "Der Teil des Kaufpreises, der auf Grund und Boden entfällt (der Rest ist das Gebäude). Boden nutzt sich nicht ab und lässt sich nicht abschreiben – deshalb wird für die AfA nur der Gebäudeanteil herangezogen. Grober Richtwert: 15–30 %." },
     beleihung: { t: "Beleihung (LTV)", d: "Wie viel Prozent des Kaufpreises über Kredit finanziert werden (englisch „Loan to Value“). Unter 80 % gibt es meist die besten Zinsen; über 90–100 % wird es spürbar teurer, weil das Risiko für die Bank steigt." },
     bruttorendite: { t: "Bruttomietrendite", d: "Jahres-Kaltmiete geteilt durch den Kaufpreis, in Prozent. Eine schnelle erste Kennzahl: Wie viel wirft die Wohnung vor allen Kosten ab? Unter etwa 3 % ist es bei heutigen Zinsen oft schwierig, dass sich die Vermietung selbst trägt." },
-    nettorendite: { t: "Nettomietrendite", d: "Realistischer als die Bruttorendite: Jahresmiete minus Deine laufenden Kosten, geteilt durch den Gesamtaufwand (Kaufpreis + Nebenkosten). Zeigt, was nach Bewirtschaftung tatsächlich als Ertrag übrig bleibt." }
+    nettorendite: { t: "Nettomietrendite", d: "Realistischer als die Bruttorendite: Jahresmiete minus Deine laufenden Kosten, geteilt durch den Gesamtaufwand (Kaufpreis + Nebenkosten). Zeigt, was nach Bewirtschaftung tatsächlich als Ertrag übrig bleibt." },
+    zinsbindung: { t: "Zinsbindung", d: "So lange garantiert Dir die Bank den vereinbarten Zinssatz – üblich sind 5 bis 20 Jahre. Ist danach noch Restschuld offen, brauchst Du eine Anschlussfinanzierung zu den dann gültigen Zinsen. Nach 10 Jahren darfst Du ohnehin jederzeit mit 6 Monaten Frist umschulden (§ 489 BGB) – eine längere Bindung gibt Sicherheit, ohne Dich zu fesseln." },
+    alter: { t: "Dein Alter (optional)", d: "Nur für die Anzeige: Daraus rechnet die App, mit welchem Alter Du – bei gleichbleibender Tilgung – voraussichtlich schuldenfrei wärst. Für ältere Käufer ein wichtiger Punkt, weil Banken die Rate gern bis etwa zum Ruhestand getragen sehen." }
   };
 
   function infoBtn(term) {
-    return '<button type="button" class="info" data-term="' + term + '" aria-label="Erklärung anzeigen">i</button>';
+    return '<button type="button" class="ibtn" data-term="' + term + '" aria-label="Erklärung anzeigen">i</button>';
+  }
+
+  /* ---------- Laufzeit-Mathematik (Annuität) ---------- */
+  // Monate bis zur vollständigen Tilgung eines Darlehens P bei Zins z und Tilgung t (beide als Dezimal p.a.)
+  function payoffMonths(P, z, t) {
+    if (P <= 0 || t <= 0) return 0;
+    if (z <= 0) return P / (P * t / 12);            // zinsfrei: 12/t Monate
+    return Math.log((z + t) / t) / Math.log(1 + z / 12);
+  }
+  // Restschuld nach 'months' Monaten (gleichbleibende Annuitätsrate)
+  function restAfter(P, z, t, months) {
+    if (P <= 0) return 0;
+    var A = P * (z + t) / 12;
+    if (z <= 0) return Math.max(0, P - A * months);
+    var i = z / 12, f = Math.pow(1 + i, months);
+    return Math.max(0, P * f - A * (f - 1) / i);
   }
 
   /* ---------- Bundesland-Auswahl aufbauen ---------- */
@@ -662,6 +846,39 @@
     // Beleihung
     var ltv = kaufpreis > 0 ? (bedarf / kaufpreis) * 100 : 0;
 
+    // Laufzeit & Zinsbindung
+    var zb = parseInt($("zinsbindung").value, 10) || 10;
+    var alter = n("alter");
+    var payoffM = Math.max(payoffMonths(bankDarlehen, zinsR, tilgR), payoffMonths(foerderDarlehen, foerdZinsR, tilgR));
+    var payoffYears = payoffM / 12;
+    var restZB = restAfter(bankDarlehen, zinsR, tilgR, zb * 12) + restAfter(foerderDarlehen, foerdZinsR, tilgR, zb * 12);
+    var alterFertig = alter > 0 ? Math.round(alter + payoffYears) : 0;
+
+    var lzEl = $("laufzeit");
+    if (bedarf > 0 && tilgR > 0 && payoffYears > 0) {
+      var restTxt = restZB > 1
+        ? 'Nach der Zinsbindung (<b>' + zb + ' Jahre</b>) sind noch ca. <b>' + euro.format(restZB) +
+          '</b> offen – dafür brauchst Du dann eine <b>Anschlussfinanzierung</b> zum dann gültigen Zins.'
+        : 'Deine Zinsbindung von <b>' + zb + ' Jahren</b> reicht, um alles abzuzahlen – keine Anschlussfinanzierung nötig.';
+      lzEl.innerHTML =
+        '<h3>Laufzeit &amp; Zinsbindung ' + infoBtn('zinsbindung') + '</h3>' +
+        '<div class="lz-row"><span class="k">Voraussichtlich schuldenfrei in</span><span class="v">ca. ' + Math.round(payoffYears) + ' Jahren</span></div>' +
+        (alterFertig > 0 ? '<div class="lz-row"><span class="k">Dann bist Du ungefähr</span><span class="v">' + alterFertig + ' Jahre</span></div>' : '') +
+        '<div class="lz-row"><span class="k">Restschuld nach ' + zb + ' J. Zinsbindung</span><span class="v">' + euro.format(restZB) + '</span></div>' +
+        '<p class="lz-note">' + restTxt + '</p>';
+      lzEl.style.display = "";
+    } else {
+      lzEl.style.display = "none";
+      lzEl.innerHTML = "";
+    }
+
+    // Hinweis für ältere Käufer
+    var ageFlag = "";
+    if (alterFertig > 80) {
+      ageFlag = flag("warn", "Mit dieser Tilgung wärst Du erst mit ca. <b>" + alterFertig +
+        "</b> schuldenfrei. Banken finanzieren älteren Käufern lieber, wenn der Kredit bis etwa zum Ruhestand oder ~80 weitgehend abbezahlt ist – eine <b>höhere Tilgung</b> oder mehr Eigenkapital hilft.");
+    }
+
     var lamp = $("lamp"), lampTxt = $("lampTxt");
     var bigLbl = $("bigLbl"), bigVal = $("bigVal"), bigCmp = $("bigCmp");
     var bd = $("breakdown"), pills = $("pills"), flags = $("flags");
@@ -716,7 +933,7 @@
         pill("Beleihung " + infoBtn("beleihung"), Math.round(ltv) + " %") +
         (flaeche > 0 ? pill("Preis/m²", euro.format(kaufpreis / flaeche)) : "");
 
-      flagsHtml = common_flags();
+      flagsHtml = ageFlag + common_flags();
       flagsHtml += flag("info", "Die Tilgung ist keine „verlorene“ Ausgabe – sie baut Dein Vermögen auf. Rein für die Wohnkosten zählt eher der Zinsanteil (" + euro.format(zinsMonat) + "/Monat) plus Hausgeld.");
       // Orientierung: leistbarer Kaufpreis
       var payAvail = budget - hausgeld - ruecklage;
@@ -790,7 +1007,7 @@
         pill("Kredit", euro.format(bedarf)) +
         pill("Beleihung " + infoBtn("beleihung"), Math.round(ltv) + " %");
 
-      flagsHtml = common_flags();
+      flagsHtml = ageFlag + common_flags();
       flagsHtml += flag("info",
         "Steuerlich absetzbar pro Jahr: Zinsen " + euro.format(zinsenJahr) + " + AfA " + euro.format(afaJahr) +
         " + Kosten " + euro.format(nichtumlage * 12) + " = " + euro.format(werbungskosten) +
@@ -815,6 +1032,8 @@
   $("resetBtn").addEventListener("click", function () {
     Object.keys(DEFAULTS).forEach(function (k) { if ($(k)) $(k).value = DEFAULTS[k]; });
     $("afa").value = "2";
+    $("zinsbindung").value = "10";
+    $("alter").value = "";
     sel.value = "8";
     setMode("eigen");
   });
@@ -848,7 +1067,7 @@
   }
 
   document.addEventListener("click", function (e) {
-    var btn = e.target.closest ? e.target.closest(".info") : null;
+    var btn = e.target.closest ? e.target.closest(".ibtn") : null;
     if (btn) {
       e.preventDefault(); e.stopPropagation();
       if (openBtn === btn) closePop();
@@ -864,12 +1083,12 @@
 
   /* Info-Buttons in die Eingabe-Labels einsetzen */
   ["eigenkapital", "budget", "kaufpreis", "bundesland", "grest", "notar", "makler",
-   "zins", "tilgung", "foerderBetrag", "foerderZins", "zuschuss", "hausgeldE",
-   "ruecklageE", "miete", "steuersatz", "nichtumlage", "afa", "grundanteil"
+   "zins", "tilgung", "zinsbindung", "alter", "foerderBetrag", "foerderZins", "zuschuss",
+   "hausgeldE", "ruecklageE", "miete", "steuersatz", "nichtumlage", "afa", "grundanteil"
   ].forEach(function (id) {
     var el = $(id); if (!el) return;
     var field = el.closest(".field"); if (!field) return;
-    var label = field.querySelector("label"); if (!label || label.querySelector(".info")) return;
+    var label = field.querySelector("label"); if (!label || label.querySelector(".ibtn")) return;
     label.insertAdjacentHTML("beforeend", " " + infoBtn(id));
   });
 
