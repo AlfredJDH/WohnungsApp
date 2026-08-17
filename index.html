@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Wohnungskauf-Rechner für Deutschland: Eigenkapital, Budget, Kaufnebenkosten, Förderung und Steuer – für Eigennutzung oder Vermietung. Mit Laufzeit-Rechnung und Grundwissen-Ratgeber. Läuft offline im Browser.">
+<meta name="description" content="Wohnungskauf-Rechner für Deutschland mit Tilgungsplan, Zielalter- und Abfindungs-Rechner, Diagramm und Grundwissen – für Eigennutzung oder Vermietung. Läuft offline im Browser.">
 <meta name="color-scheme" content="light dark">
 <title>Kann ich mir das leisten? · Wohnungsrechner</title>
 <style>
@@ -287,6 +287,79 @@
     padding-top:11px;border-top:1px solid var(--line)}
   .laufzeit .lz-note b{color:var(--ink)}
 
+  /* ---------- Rückzahlung / Tilgungsplan ---------- */
+  .plan{margin:28px 0 8px}
+  .plan > h2{
+    margin:0 0 4px;font-size:clamp(19px,3vw,23px);font-weight:800;
+    letter-spacing:-.02em;text-wrap:balance;
+  }
+  .plan .klead{color:var(--muted);font-size:14px;margin:0 0 16px;max-width:70ch}
+  .goalctrl{display:grid;grid-template-columns:1fr 1fr;gap:13px 16px;max-width:620px;margin-bottom:16px}
+  @media (max-width:560px){ .goalctrl{grid-template-columns:1fr} }
+
+  .goalbox{display:grid;gap:12px;margin-bottom:18px}
+  .goalbox:empty{display:none}
+  .goalcard{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    box-shadow:var(--shadow);padding:15px 17px;
+  }
+  .goalcard.hl{border-color:var(--accent);background:linear-gradient(var(--accent-soft),var(--surface) 65%)}
+  .goalcard h3{margin:0 0 4px;font-size:14px;font-weight:750;display:flex;align-items:center;gap:8px}
+  .goalgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  @media (max-width:560px){ .goalgrid{grid-template-columns:1fr} }
+  .way{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:12px 13px}
+  .way .wt{font-size:12px;font-weight:700;color:var(--accent-ink);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+  .way .wbig{font-size:22px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+  .way .wsub{font-size:12.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+  .goalcard .gnote{font-size:12.5px;color:var(--muted);line-height:1.5;margin:10px 0 0}
+  .goalcard .gnote b{color:var(--ink)}
+  .goalhint{font-size:13.5px;color:var(--muted);line-height:1.55;background:var(--surface);
+    border:1px dashed var(--line-strong);border-radius:11px;padding:13px 15px}
+  .goalhint b{color:var(--ink)}
+
+  /* Diagramm */
+  .chartcard{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:16px 16px 10px;
+  }
+  .charttitle{font-size:13.5px;font-weight:750;margin-bottom:6px}
+  .charttitle .chint{color:var(--muted);font-weight:500}
+  .chart{position:relative;overflow-x:auto}
+  .chart svg{display:block;width:100%;min-width:520px;height:auto}
+  .chart .grid line{stroke:var(--line);stroke-width:1}
+  .chart .axis{fill:var(--muted);font-size:11px;font-variant-numeric:tabular-nums}
+  .chart .axis.x{text-anchor:middle}
+  .chart .axis.y{text-anchor:end}
+  .chart .area{fill:var(--accent);fill-opacity:.13;stroke:none}
+  .chart .line{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+  .chart .marker{stroke:var(--muted);stroke-width:1.3;stroke-dasharray:4 4}
+  .chart .marker.ziel{stroke:var(--warn)}
+  .chart .mlabel{font-size:10.5px;font-weight:700;fill:var(--muted)}
+  .chart .mlabel.ziel{fill:var(--warn)}
+  .chart .endpt{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+  .chart .cross{stroke:var(--ink);stroke-width:1;opacity:.35}
+  .chart .cdot{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+  .chart .tt{
+    position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line-strong);
+    border-radius:9px;box-shadow:var(--shadow);padding:8px 10px;font-size:12px;line-height:1.4;
+    color:var(--ink);white-space:nowrap;opacity:0;transform:translate(-50%,-8px);transition:opacity .08s;z-index:5;
+  }
+  .chart .tt.show{opacity:1}
+  .chart .tt b{font-variant-numeric:tabular-nums}
+  .chart .tt .k{color:var(--muted)}
+
+  /* Jahres-Tabelle */
+  details.q.tbl{margin-top:14px}
+  .tblwrap{overflow-x:auto}
+  table.plan-t{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;min-width:440px}
+  table.plan-t th,table.plan-t td{padding:7px 10px;text-align:right;white-space:nowrap}
+  table.plan-t th:first-child,table.plan-t td:first-child{text-align:left}
+  table.plan-t thead th{color:var(--muted);font-weight:650;font-size:11.5px;text-transform:uppercase;
+    letter-spacing:.03em;border-bottom:1px solid var(--line-strong)}
+  table.plan-t tbody td{border-bottom:1px solid var(--line);color:var(--ink)}
+  table.plan-t tbody tr:hover td{background:var(--surface-2)}
+  table.plan-t .rest{font-weight:700}
+
   /* ---------- Grundwissen (Akkordeon) ---------- */
   .knowledge{max-width:820px;margin:26px 0 8px}
   .knowledge > h2{
@@ -562,6 +635,37 @@
     </aside>
   </div>
 
+  <section class="plan">
+    <h2>Rückzahlung im Überblick</h2>
+    <p class="klead">Wann willst Du schuldenfrei sein – und was bräuchte es dafür: eine höhere Rate oder eine Sondertilgung (z. B. aus einer Abfindung)?</p>
+    <div class="goalctrl">
+      <div class="field">
+        <label for="zielalter">Fertig mit Alter <span class="u">optional</span></label>
+        <div class="inp has-post"><span class="post">J.</span>
+          <input type="number" id="zielalter" min="30" max="99" step="1" value="" placeholder="z. B. 64" inputmode="numeric"></div>
+        <span class="note">Braucht auch „Dein Alter" oben in der Finanzierung.</span>
+      </div>
+      <div class="field">
+        <label for="sondertilgung">Erwartete Abfindung / Sondertilgung <span class="u">optional</span></label>
+        <div class="inp has-pre"><span class="pre">€</span>
+          <input type="number" id="sondertilgung" min="0" step="1000" value="" placeholder="z. B. 40000" inputmode="numeric"></div>
+        <span class="note">Einmalzahlung heute – zeigt, wie viel früher Du fertig bist.</span>
+      </div>
+    </div>
+
+    <div id="goalbox" class="goalbox"></div>
+
+    <div class="chartcard">
+      <div class="charttitle">Restschuld über die Jahre<span class="chint"> · so schmilzt Deine Schuld</span></div>
+      <div id="chart" class="chart"></div>
+    </div>
+
+    <details class="q tbl">
+      <summary>Jahr-für-Jahr-Tabelle anzeigen</summary>
+      <div class="a" id="planTable"></div>
+    </details>
+  </section>
+
   <section class="knowledge">
     <h2>Grundwissen – ohne Fachchinesisch erklärt</h2>
     <p class="klead">Noch nie mit Krediten beschäftigt? Kein Problem. Hier die wichtigsten Begriffe rund ums Baugeld, in Alltagssprache. Tippe auf eine Frage.</p>
@@ -678,6 +782,7 @@
   var euro = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
   var euro2 = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
   var pct = new Intl.NumberFormat("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+  function euroK(v) { return v >= 1000 ? Math.round(v / 1000) + " T€" : "0 €"; }
 
   var $ = function (id) { return document.getElementById(id); };
   function n(id) { var v = parseFloat($(id).value); return isFinite(v) ? v : 0; }
@@ -718,7 +823,9 @@
     bruttorendite: { t: "Bruttomietrendite", d: "Jahres-Kaltmiete geteilt durch den Kaufpreis, in Prozent. Eine schnelle erste Kennzahl: Wie viel wirft die Wohnung vor allen Kosten ab? Unter etwa 3 % ist es bei heutigen Zinsen oft schwierig, dass sich die Vermietung selbst trägt." },
     nettorendite: { t: "Nettomietrendite", d: "Realistischer als die Bruttorendite: Jahresmiete minus Deine laufenden Kosten, geteilt durch den Gesamtaufwand (Kaufpreis + Nebenkosten). Zeigt, was nach Bewirtschaftung tatsächlich als Ertrag übrig bleibt." },
     zinsbindung: { t: "Zinsbindung", d: "So lange garantiert Dir die Bank den vereinbarten Zinssatz – üblich sind 5 bis 20 Jahre. Ist danach noch Restschuld offen, brauchst Du eine Anschlussfinanzierung zu den dann gültigen Zinsen. Nach 10 Jahren darfst Du ohnehin jederzeit mit 6 Monaten Frist umschulden (§ 489 BGB) – eine längere Bindung gibt Sicherheit, ohne Dich zu fesseln." },
-    alter: { t: "Dein Alter (optional)", d: "Nur für die Anzeige: Daraus rechnet die App, mit welchem Alter Du – bei gleichbleibender Tilgung – voraussichtlich schuldenfrei wärst. Für ältere Käufer ein wichtiger Punkt, weil Banken die Rate gern bis etwa zum Ruhestand getragen sehen." }
+    alter: { t: "Dein Alter (optional)", d: "Nur für die Anzeige: Daraus rechnet die App, mit welchem Alter Du – bei gleichbleibender Tilgung – voraussichtlich schuldenfrei wärst. Für ältere Käufer ein wichtiger Punkt, weil Banken die Rate gern bis etwa zum Ruhestand getragen sehen." },
+    zielalter: { t: "Fertig mit Alter", d: "Bis zu diesem Alter möchtest Du schuldenfrei sein. Die App rechnet aus, welche monatliche Rate (bzw. Tilgung) dafür nötig ist – oder welche einmalige Sondertilgung, wenn Du die aktuelle Rate behalten willst. Setzt voraus, dass Du oben Dein aktuelles Alter eingetragen hast." },
+    sondertilgung: { t: "Sondertilgung / Abfindung", d: "Eine einmalige Extrazahlung zusätzlich zur normalen Rate, die direkt die Restschuld senkt – z. B. aus einer Abfindung, einem Bonus oder Erbe. Sie verkürzt die Laufzeit, ohne dass die Monatsrate steigt. Trag eine erwartete Summe ein, um ihre Wirkung zu sehen." }
   };
 
   function infoBtn(term) {
@@ -739,6 +846,140 @@
     if (z <= 0) return Math.max(0, P - A * months);
     var i = z / 12, f = Math.pow(1 + i, months);
     return Math.max(0, P * f - A * (f - 1) / i);
+  }
+
+  // Monatlicher Tilgungsplan: Array je Monat mit {bal, interest, principal}
+  function buildSchedule(P, annualRate, monthlyPay) {
+    var i = annualRate / 12, bal = P;
+    var arr = [{ bal: P, interest: 0, principal: 0 }];
+    var guard = 0;
+    while (bal > 0.5 && guard < 1320) {
+      guard++;
+      var interest = bal * i;
+      var principal = monthlyPay - interest;
+      if (principal <= 0.01) { arr.neverEnds = true; break; }
+      if (principal > bal) principal = bal;
+      bal -= principal;
+      arr.push({ bal: bal, interest: interest, principal: principal });
+    }
+    return arr;
+  }
+  // Aggregation je Jahr
+  function scheduleByYear(sched) {
+    var out = [], years = Math.ceil((sched.length - 1) / 12);
+    for (var y = 1; y <= years; y++) {
+      var iSum = 0, pSum = 0, last = sched[0].bal;
+      for (var m = (y - 1) * 12 + 1; m <= y * 12; m++) {
+        if (m < sched.length) { iSum += sched[m].interest; pSum += sched[m].principal; last = sched[m].bal; }
+      }
+      out.push({ year: y, interest: iSum, principal: pSum, balEnd: last });
+    }
+    return out;
+  }
+  function totalInterest(sched) {
+    var s = 0; for (var m = 1; m < sched.length; m++) s += sched[m].interest; return s;
+  }
+  // Annuitätsrate für Restschuld P, Monatszins i, n Monate
+  function annuityPay(P, i, n) { return i <= 0 ? P / n : P * i / (1 - Math.pow(1 + i, -n)); }
+  // Barwert einer Rate 'pay' über n Monate
+  function pvAnnuity(pay, i, n) { return i <= 0 ? pay * n : pay * (1 - Math.pow(1 + i, -n)) / i; }
+
+  var chartState = null;
+
+  // Diagramm rendern (Restschuld über die Jahre); gibt SVG-String zurück
+  function renderChartSVG(pts, P, opts) {
+    var W = 800, H = 300, padL = 66, padR = 16, padT = 14, padB = 32;
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var maxYear = Math.max(1, pts[pts.length - 1].year);
+    var xOf = function (y) { return padL + (y / maxYear) * plotW; };
+    var yOf = function (b) { return padT + (1 - b / P) * plotH; };
+    var baseY = padT + plotH;
+
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Restschuld über die Jahre">';
+    // Gitter + Y-Beschriftung
+    s += '<g class="grid">';
+    var fracs = [0, 0.25, 0.5, 0.75, 1];
+    fracs.forEach(function (f) {
+      var bal = P * (1 - f), yy = yOf(bal);
+      s += '<line x1="' + padL + '" y1="' + yy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + yy.toFixed(1) + '"/>';
+      s += '<text class="axis y" x="' + (padL - 8) + '" y="' + (yy + 3.5).toFixed(1) + '">' + opts.fmt(bal) + '</text>';
+    });
+    s += '</g>';
+    // Fläche + Linie
+    var line = '', area = 'M' + xOf(pts[0].year).toFixed(1) + ',' + yOf(pts[0].bal).toFixed(1);
+    pts.forEach(function (p, idx) {
+      var X = xOf(p.year).toFixed(1), Y = yOf(p.bal).toFixed(1);
+      line += (idx === 0 ? 'M' : 'L') + X + ',' + Y;
+      if (idx > 0) area += 'L' + X + ',' + Y;
+    });
+    area += 'L' + xOf(pts[pts.length - 1].year).toFixed(1) + ',' + baseY.toFixed(1) + 'L' + xOf(pts[0].year).toFixed(1) + ',' + baseY.toFixed(1) + 'Z';
+    s += '<path class="area" d="' + area + '"/>';
+    s += '<path class="line" d="' + line + '"/>';
+    // X-Beschriftung
+    var step = Math.max(1, Math.round(maxYear / 6));
+    for (var y = 0; y <= maxYear; y += step) {
+      var X = xOf(y);
+      var lbl = 'J' + y;
+      s += '<text class="axis x" x="' + X.toFixed(1) + '" y="' + (baseY + 15) + '">' + lbl + '</text>';
+      if (opts.alterStart > 0) s += '<text class="axis x" x="' + X.toFixed(1) + '" y="' + (baseY + 27) + '">' + (opts.alterStart + y) + 'J.</text>';
+    }
+    // Marker: Zinsbindung
+    if (opts.zb > 0 && opts.zb < maxYear) {
+      var xz = xOf(opts.zb);
+      s += '<line class="marker" x1="' + xz.toFixed(1) + '" y1="' + padT + '" x2="' + xz.toFixed(1) + '" y2="' + baseY + '"/>';
+      s += '<text class="mlabel" x="' + (xz + 4).toFixed(1) + '" y="' + (padT + 11) + '">Zinsbindung</text>';
+    }
+    // Marker: Zielalter
+    if (opts.zielRel > 0 && opts.zielRel < maxYear) {
+      var xt = xOf(opts.zielRel);
+      s += '<line class="marker ziel" x1="' + xt.toFixed(1) + '" y1="' + padT + '" x2="' + xt.toFixed(1) + '" y2="' + baseY + '"/>';
+      s += '<text class="mlabel ziel" x="' + (xt + 4).toFixed(1) + '" y="' + (padT + 22) + '">Ziel</text>';
+    }
+    // Endpunkt
+    var lp = pts[pts.length - 1];
+    s += '<circle class="endpt" cx="' + xOf(lp.year).toFixed(1) + '" cy="' + yOf(lp.bal).toFixed(1) + '" r="4.5"/>';
+    // Crosshair (versteckt)
+    s += '<g id="crossG" style="display:none"><line class="cross" y1="' + padT + '" y2="' + baseY + '"/><circle class="cdot" r="5"/></g>';
+    s += '</svg><div class="tt" id="chartTT"></div>';
+
+    chartState = { W: W, padL: padL, padR: padR, padT: padT, plotW: plotW, plotH: plotH, maxYear: maxYear, P: P, pts: pts, alterStart: opts.alterStart, baseY: baseY };
+    return s;
+  }
+
+  // Hover-Interaktion (einmalig binden)
+  function installChartHover() {
+    var chart = $("chart");
+    if (!chart) return;
+    chart.addEventListener("mousemove", function (e) {
+      if (!chartState) return;
+      var svg = chart.querySelector("svg"); if (!svg) return;
+      var g = chart.querySelector("#crossG"), tt = chart.querySelector("#chartTT");
+      if (!g || !tt) return;
+      var rect = svg.getBoundingClientRect();
+      var sx = rect.width / chartState.W, sy = rect.height / 300;
+      var mxv = (e.clientX - rect.left) / sx;
+      var yr = (mxv - chartState.padL) / chartState.plotW * chartState.maxYear;
+      var idx = Math.round(yr);
+      if (idx < 0) idx = 0; if (idx >= chartState.pts.length) idx = chartState.pts.length - 1;
+      var p = chartState.pts[idx];
+      var X = chartState.padL + (p.year / chartState.maxYear) * chartState.plotW;
+      var Y = chartState.padT + (1 - p.bal / chartState.P) * chartState.plotH;
+      g.style.display = "";
+      g.querySelector("line").setAttribute("x1", X); g.querySelector("line").setAttribute("x2", X);
+      g.querySelector("circle").setAttribute("cx", X); g.querySelector("circle").setAttribute("cy", Y);
+      var chartRect = chart.getBoundingClientRect();
+      var leftPx = (rect.left - chartRect.left) + X * sx;
+      var topPx = (rect.top - chartRect.top) + Y * sy;
+      tt.style.left = leftPx + "px"; tt.style.top = topPx + "px";
+      tt.classList.add("show");
+      var ageStr = chartState.alterStart > 0 ? ' · <span class="k">Alter</span> <b>' + (chartState.alterStart + p.year) + '</b>' : '';
+      tt.innerHTML = '<span class="k">Jahr</span> <b>' + p.year + '</b>' + ageStr + '<br><span class="k">Restschuld</span> <b>' + euro.format(p.bal) + '</b>';
+    });
+    chart.addEventListener("mouseleave", function () {
+      var g = chart.querySelector("#crossG"), tt = chart.querySelector("#chartTT");
+      if (g) g.style.display = "none";
+      if (tt) tt.classList.remove("show");
+    });
   }
 
   /* ---------- Bundesland-Auswahl aufbauen ---------- */
@@ -877,6 +1118,80 @@
     if (alterFertig > 80) {
       ageFlag = flag("warn", "Mit dieser Tilgung wärst Du erst mit ca. <b>" + alterFertig +
         "</b> schuldenfrei. Banken finanzieren älteren Käufern lieber, wenn der Kredit bis etwa zum Ruhestand oder ~80 weitgehend abbezahlt ist – eine <b>höhere Tilgung</b> oder mehr Eigenkapital hilft.");
+    }
+
+    // ---- Tilgungsplan, Diagramm & Zielrechnung ----
+    var zBlend = bedarf > 0 ? zinsenJahr / bedarf : 0;
+    var iM = zBlend / 12;
+    var zielalter = n("zielalter");
+    var sonder = n("sondertilgung");
+    var goalEl = $("goalbox"), chartEl = $("chart"), tblEl = $("planTable");
+
+    if (bedarf > 1 && tilgR > 0 && rate > 0) {
+      var sched = buildSchedule(bedarf, zBlend, rate);
+      var yd = scheduleByYear(sched);
+      var basePayYears = (sched.length - 1) / 12;
+      var baseInterest = totalInterest(sched);
+
+      var pts = [{ year: 0, bal: bedarf }];
+      yd.forEach(function (r) { pts.push({ year: r.year, bal: r.balEnd }); });
+      var zielRel = (alter > 0 && zielalter > alter) ? (zielalter - alter) : 0;
+      chartEl.innerHTML = renderChartSVG(pts, bedarf, { fmt: euroK, alterStart: alter, zb: zb, zielRel: zielRel });
+
+      var trs = "";
+      yd.forEach(function (r) {
+        trs += "<tr><td>" + r.year + (alter > 0 ? " <span style='color:var(--muted)'>(" + (alter + r.year) + ")</span>" : "") +
+          "</td><td>" + euro.format(r.interest) + "</td><td>" + euro.format(r.principal) +
+          "</td><td class='rest'>" + euro.format(r.balEnd) + "</td></tr>";
+      });
+      tblEl.innerHTML =
+        '<div class="tblwrap"><table class="plan-t"><thead><tr>' +
+        '<th>Jahr' + (alter > 0 ? " (Alter)" : "") + '</th><th>Zinsen</th><th>Tilgung</th><th>Restschuld Ende</th>' +
+        '</tr></thead><tbody>' + trs + '</tbody></table></div>';
+
+      var gb = "";
+      if (alter > 0 && zielalter > alter) {
+        var nZiel = (zielalter - alter) * 12;
+        var reqPay = annuityPay(bedarf, iM, nZiel);
+        var reqTilg = (reqPay * 12 / bedarf - zBlend) * 100;
+        var reqSonder = bedarf - pvAnnuity(rate, iM, nZiel);
+        if (basePayYears <= (zielalter - alter) + 0.05) {
+          gb += '<div class="goalcard hl"><h3>Ziel erreichbar ' + infoBtn("zielalter") + '</h3>' +
+            '<p class="gnote">Mit Deinem aktuellen Plan bist Du in ca. <b>' + Math.round(basePayYears) +
+            ' Jahren</b> (mit ca. <b>' + Math.round(alter + basePayYears) + '</b>) schuldenfrei – also schon vor Deinem Ziel mit ' + zielalter + '. Du hast Spielraum.</p></div>';
+        } else {
+          gb += '<div class="goalcard hl"><h3>Schuldenfrei mit ' + zielalter + ' – das brauchst Du dafür ' + infoBtn("zielalter") + '</h3>' +
+            '<div class="goalgrid">' +
+            '<div class="way"><div class="wt">Weg 1 · über die Rate</div><div class="wbig">' + euro.format(reqPay) + '<span style="font-size:13px;font-weight:600"> /Mon.</span></div>' +
+            '<div class="wsub">≈ ' + pct.format(Math.max(0, reqTilg)) + ' % Tilgung. Aktuell: ' + euro.format(rate) + '/Mon. ' +
+            (reqPay > budget ? '<b style="color:var(--bad)">Über Deinem Budget.</b>' : 'Im Budget.') + '</div></div>' +
+            '<div class="way"><div class="wt">Weg 2 · Sondertilgung heute</div><div class="wbig">' + euro.format(Math.max(0, reqSonder)) + '</div>' +
+            '<div class="wsub">Einmalzahlung jetzt bei gleicher Rate – so groß müsste Deine <b>Abfindung</b> (nach Steuern) sein.</div></div>' +
+            '</div>' +
+            '<p class="gnote">Beides lässt sich kombinieren – kleinere Abfindung plus etwas höhere Tilgung. Hinweis: Abfindungen sind steuerpflichtig (oft „Fünftelregelung“), <b>brutto</b> müsste sie also höher ausfallen als der Netto-Betrag oben.</p></div>';
+        }
+      } else {
+        gb += '<div class="goalhint">Trag oben <b>Dein Alter</b> (Abschnitt Finanzierung) und hier <b>„Fertig mit Alter“</b> ein – dann rechnet die App aus, welche Rate oder welche <b>Abfindung/Sondertilgung</b> Dich rechtzeitig schuldenfrei macht.</div>';
+      }
+
+      if (sonder > 0.5) {
+        var schedS = buildSchedule(Math.max(0, bedarf - sonder), zBlend, rate);
+        var sPayYears = (schedS.length - 1) / 12;
+        var saved = baseInterest - totalInterest(schedS);
+        var earlier = basePayYears - sPayYears;
+        gb += '<div class="goalcard"><h3>Mit Deiner Sondertilgung von ' + euro.format(sonder) + ' ' + infoBtn("sondertilgung") + '</h3>' +
+          '<div class="goalgrid">' +
+          '<div class="way"><div class="wt">Schuldenfrei in</div><div class="wbig">ca. ' + Math.round(sPayYears) + ' J.' +
+          (alter > 0 ? '<span style="font-size:13px;font-weight:600"> (mit ' + Math.round(alter + sPayYears) + ')</span>' : '') + '</div>' +
+          '<div class="wsub">' + (earlier > 0.1 ? "rund " + Math.round(earlier) + " Jahre früher als ohne." : "kaum Unterschied.") + '</div></div>' +
+          '<div class="way"><div class="wt">Gesparte Zinsen</div><div class="wbig" style="color:var(--good)">' + euro.format(Math.max(0, saved)) + '</div>' +
+          '<div class="wsub">über die gesamte Laufzeit.</div></div>' +
+          '</div></div>';
+      }
+      goalEl.innerHTML = gb;
+    } else {
+      chartEl.innerHTML = ""; tblEl.innerHTML = ""; goalEl.innerHTML = "";
+      chartState = null;
     }
 
     var lamp = $("lamp"), lampTxt = $("lampTxt");
@@ -1034,6 +1349,8 @@
     $("afa").value = "2";
     $("zinsbindung").value = "10";
     $("alter").value = "";
+    $("zielalter").value = "";
+    $("sondertilgung").value = "";
     sel.value = "8";
     setMode("eigen");
   });
@@ -1084,13 +1401,16 @@
   /* Info-Buttons in die Eingabe-Labels einsetzen */
   ["eigenkapital", "budget", "kaufpreis", "bundesland", "grest", "notar", "makler",
    "zins", "tilgung", "zinsbindung", "alter", "foerderBetrag", "foerderZins", "zuschuss",
-   "hausgeldE", "ruecklageE", "miete", "steuersatz", "nichtumlage", "afa", "grundanteil"
+   "hausgeldE", "ruecklageE", "miete", "steuersatz", "nichtumlage", "afa", "grundanteil",
+   "zielalter", "sondertilgung"
   ].forEach(function (id) {
     var el = $(id); if (!el) return;
     var field = el.closest(".field"); if (!field) return;
     var label = field.querySelector("label"); if (!label || label.querySelector(".ibtn")) return;
     label.insertAdjacentHTML("beforeend", " " + infoBtn(id));
   });
+
+  installChartHover();
 
   /* ---------- Live-Berechnung ---------- */
   document.querySelectorAll("input, select").forEach(function (el) {
