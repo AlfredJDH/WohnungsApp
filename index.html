@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Wohnungskauf-Rechner für Deutschland: Eigenkapital, Budget, Kaufnebenkosten, Förderung und Steuer – für Eigennutzung oder Vermietung. Läuft offline im Browser.">
+<meta name="description" content="Wohnungskauf-Rechner für Deutschland: Eigenkapital, Budget, Kaufnebenkosten, Förderung und Steuer – für Eigennutzung oder Vermietung. Mit Erklärungen zu allen Fachbegriffen. Läuft offline im Browser.">
 <meta name="color-scheme" content="light dark">
 <title>Kann ich mir das leisten? · Wohnungsrechner</title>
 <style>
@@ -236,6 +236,36 @@
   .flag.warn .ic{background:var(--warn)} .flag.warn{border-color:var(--warn-soft)}
   .flag.bad .ic{background:var(--bad)} .flag.bad{border-color:var(--bad-soft)}
   .flag.good .ic{background:var(--good)} .flag.good{border-color:var(--good-soft)}
+
+  /* ---------- Info-Buttons „ⓘ" + Popover ---------- */
+  .info{
+    -webkit-appearance:none;appearance:none;border:0;padding:0;cursor:pointer;
+    display:inline-grid;place-items:center;width:16px;height:16px;margin-left:5px;
+    border-radius:50%;background:var(--accent-soft);color:var(--accent-ink);
+    font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:700;
+    font-size:11px;line-height:1;vertical-align:middle;flex:0 0 auto;transition:background .12s,color .12s;
+  }
+  .info:hover{background:var(--accent);color:#fff}
+  .info:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .pill .info{width:15px;height:15px;background:var(--surface);border:1px solid var(--line)}
+  .pill .info:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  .pop{
+    position:fixed;z-index:200;max-width:288px;width:max-content;
+    background:var(--surface);border:1px solid var(--line-strong);border-radius:12px;
+    box-shadow:0 8px 30px rgba(19,35,42,.18),0 2px 8px rgba(19,35,42,.10);
+    padding:12px 30px 13px 14px;font-size:13px;line-height:1.5;color:var(--ink);
+    opacity:0;transform:translateY(-5px);pointer-events:none;transition:opacity .13s,transform .13s;
+  }
+  .pop.show{opacity:1;transform:none;pointer-events:auto}
+  .pop h4{margin:0 0 5px;font-size:13.5px;font-weight:750;letter-spacing:-.01em;color:var(--accent-ink)}
+  .pop p{margin:0;color:var(--muted)}
+  .pop .close{
+    position:absolute;top:5px;right:7px;border:0;background:transparent;color:var(--muted);
+    cursor:pointer;font-size:18px;line-height:1;padding:2px 4px;border-radius:6px;
+  }
+  .pop .close:hover{color:var(--ink);background:var(--surface-2)}
+  @media (prefers-reduced-motion:reduce){ .pop{transition:none} }
 
   .disclaimer{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:18px;
     padding-top:14px;border-top:1px solid var(--line)}
@@ -495,6 +525,37 @@
   };
 
   var mode = "eigen"; // "eigen" | "vermieten"
+  var pop = null, openBtn = null;
+
+  /* ---------- Glossar: Fachbegriffe in Alltagssprache ---------- */
+  var GLOSSARY = {
+    eigenkapital: { t: "Eigenkapital", d: "Das Geld, das Du selbst mitbringst und nicht leihen musst: Erspartes, Bausparguthaben, verkaufte Wertpapiere, geschenktes Geld. Je mehr Eigenkapital, desto weniger Kredit brauchst Du – und desto günstiger wird meist der Zins." },
+    budget: { t: "Monatliches Budget", d: "Der Betrag, der Dir jeden Monat übrig bleibt, wenn alle anderen Lebenshaltungskosten bezahlt sind (Essen, Auto, Versicherungen, Freizeit …). Aus diesem Geld muss die Wohnung bezahlt werden." },
+    kaufpreis: { t: "Kaufpreis", d: "Der reine Preis der Wohnung laut Kaufvertrag – ohne die Nebenkosten wie Grunderwerbsteuer, Notar und Makler. Die kommen extra dazu." },
+    bundesland: { t: "Bundesland", d: "Es bestimmt die Höhe der Grunderwerbsteuer. Jedes Bundesland legt seinen eigenen Satz fest – aktuell zwischen 3,5 % (Bayern) und 6,5 % (z. B. NRW)." },
+    grest: { t: "Grunderwerbsteuer", d: "Eine einmalige Steuer, die beim Kauf fällig wird. Sie wird auf den Kaufpreis berechnet (je nach Bundesland 3,5–6,5 %) und muss bezahlt werden, bevor Du als Eigentümer ins Grundbuch eingetragen wirst." },
+    notar: { t: "Notar & Grundbuch", d: "Ein Immobilienkauf muss in Deutschland vom Notar beurkundet werden (ca. 1,5 %). Dazu kommt die Eintragung als Eigentümer ins Grundbuch beim Amtsgericht (ca. 0,5 %). Zusammen rund 2 % des Kaufpreises." },
+    makler: { t: "Maklerprovision", d: "Das Honorar des Immobilienmaklers, falls einer vermittelt. Seit 2020 teilen sich Käufer und Verkäufer die Provision meist – auf Dich entfallen dann oft rund 3,57 % inkl. Mehrwertsteuer. Kaufst Du ohne Makler: 0 %." },
+    zins: { t: "Sollzins", d: "Der Zinssatz pro Jahr, den die Bank für den Kredit verlangt – also der Preis fürs geliehene Geld. Der später oft genannte „Effektivzins“ liegt minimal höher, weil er kleine Finanzierungs-Nebenkosten mit einrechnet." },
+    tilgung: { t: "Anfängliche Tilgung", d: "Der Anteil des Kredits, den Du im ersten Jahr zurückzahlst – in % pro Jahr. Beispiel: 2 % von 300.000 € sind 6.000 € im ersten Jahr. Höhere Tilgung heißt: schneller schuldenfrei, aber höhere Monatsrate." },
+    foerderBetrag: { t: "Förderdarlehen (KfW)", d: "Ein besonders zinsgünstiger Kredit staatlicher Förderbanken – vor allem der KfW – für Wohneigentum oder energieeffizientes Bauen und Sanieren. Er ersetzt einen Teil des teureren Bankkredits. Konditionen erfährst Du bei der KfW oder Deiner Bank." },
+    foerderZins: { t: "Förderzins", d: "Der Zinssatz des Förderdarlehens. Weil er meist deutlich unter dem normalen Bankzins liegt, senkt jeder geförderte Euro Deine Monatsrate." },
+    zuschuss: { t: "Einmaliger Zuschuss", d: "Geld, das Du geschenkt bekommst und nicht zurückzahlen musst – z. B. ein Tilgungszuschuss der KfW oder ein Landes-Förderprogramm. Er senkt direkt den Kreditbedarf und wirkt damit wie zusätzliches Eigenkapital." },
+    hausgeldE: { t: "Hausgeld / Wohngeld", d: "Der monatliche Beitrag an die Eigentümergemeinschaft bei einer Eigentumswohnung. Er deckt Betriebskosten (Müll, Wasser, Hausmeister), Verwaltung und die Instandhaltungsrücklage. Das Hausgeld kommt zusätzlich zur Kreditrate – es fällt auch nach dem Abbezahlen weiter an." },
+    ruecklageE: { t: "Zusätzliche Rücklage", d: "Geld, das Du monatlich extra für größere Reparaturen zurücklegst (neue Heizung, Fenster, Dach). Als Sicherheitspuffer über das hinaus, was schon im Hausgeld steckt." },
+    miete: { t: "Kaltmiete", d: "Die Miete ohne Neben- und Betriebskosten („kalt“ = ohne Heizung/Wasser). Nur sie ist Deine echte Einnahme als Vermieter. Die Betriebskosten legst Du separat auf die Mieter um – sie sind für Dich ein durchlaufender Posten." },
+    steuersatz: { t: "Grenzsteuersatz", d: "Der Prozentsatz, mit dem Dein zusätzlich verdientes (oder gespartes) Einkommen versteuert wird – Dein persönlicher Spitzensteuersatz (bis 42 %, sehr hohe Einkommen 45 %). Er entscheidet, wie stark sich absetzbare Kosten bei Dir steuerlich auswirken." },
+    nichtumlage: { t: "Nicht umlagefähige Kosten", d: "Kosten, die Du als Vermieter selbst tragen musst und NICHT auf die Mieter umlegen darfst – vor allem die Verwaltungskosten und die Instandhaltungsrücklage. Sie schmälern Deinen Ertrag." },
+    afa: { t: "Abschreibung (AfA)", d: "„Absetzung für Abnutzung“: Als Vermieter darfst Du den Wert des Gebäudes über viele Jahre steuerlich abschreiben – meist 2 % pro Jahr (Neubau ab 2023: 3 %). Das senkt Deine Steuer, obwohl kein echtes Geld abfließt. Nur das Gebäude zählt, nicht Grund und Boden." },
+    grundanteil: { t: "Grundstücksanteil", d: "Der Teil des Kaufpreises, der auf Grund und Boden entfällt (der Rest ist das Gebäude). Boden nutzt sich nicht ab und lässt sich nicht abschreiben – deshalb wird für die AfA nur der Gebäudeanteil herangezogen. Grober Richtwert: 15–30 %." },
+    beleihung: { t: "Beleihung (LTV)", d: "Wie viel Prozent des Kaufpreises über Kredit finanziert werden (englisch „Loan to Value“). Unter 80 % gibt es meist die besten Zinsen; über 90–100 % wird es spürbar teurer, weil das Risiko für die Bank steigt." },
+    bruttorendite: { t: "Bruttomietrendite", d: "Jahres-Kaltmiete geteilt durch den Kaufpreis, in Prozent. Eine schnelle erste Kennzahl: Wie viel wirft die Wohnung vor allen Kosten ab? Unter etwa 3 % ist es bei heutigen Zinsen oft schwierig, dass sich die Vermietung selbst trägt." },
+    nettorendite: { t: "Nettomietrendite", d: "Realistischer als die Bruttorendite: Jahresmiete minus Deine laufenden Kosten, geteilt durch den Gesamtaufwand (Kaufpreis + Nebenkosten). Zeigt, was nach Bewirtschaftung tatsächlich als Ertrag übrig bleibt." }
+  };
+
+  function infoBtn(term) {
+    return '<button type="button" class="info" data-term="' + term + '" aria-label="Erklärung anzeigen">i</button>';
+  }
 
   /* ---------- Bundesland-Auswahl aufbauen ---------- */
   var sel = $("bundesland");
@@ -559,6 +620,7 @@
 
   /* ---------- Kernberechnung ---------- */
   function compute() {
+    if (pop) closePop();
     var kaufpreis = n("kaufpreis");
     var ek = n("eigenkapital");
     var budget = n("budget");
@@ -651,7 +713,7 @@
       pills.innerHTML =
         pill("Kredit", euro.format(bedarf)) +
         pill("Nebenkosten", euro.format(nebenkosten)) +
-        pill("Beleihung", Math.round(ltv) + " %") +
+        pill("Beleihung " + infoBtn("beleihung"), Math.round(ltv) + " %") +
         (flaeche > 0 ? pill("Preis/m²", euro.format(kaufpreis / flaeche)) : "");
 
       flagsHtml = common_flags();
@@ -723,10 +785,10 @@
           (eigenaufwand > 0 ? "−" : "+") + euro.format(Math.abs(eigenaufwand)), "total");
 
       pills.innerHTML =
-        pill("Bruttorendite", pct.format(bruttoRendite) + " %") +
-        pill("Nettorendite", pct.format(nettoRendite) + " %") +
+        pill("Bruttorendite " + infoBtn("bruttorendite"), pct.format(bruttoRendite) + " %") +
+        pill("Nettorendite " + infoBtn("nettorendite"), pct.format(nettoRendite) + " %") +
         pill("Kredit", euro.format(bedarf)) +
-        pill("Beleihung", Math.round(ltv) + " %");
+        pill("Beleihung " + infoBtn("beleihung"), Math.round(ltv) + " %");
 
       flagsHtml = common_flags();
       flagsHtml += flag("info",
@@ -755,6 +817,60 @@
     $("afa").value = "2";
     sel.value = "8";
     setMode("eigen");
+  });
+
+  /* ---------- Info-Popover ---------- */
+  pop = document.createElement("div");
+  pop.className = "pop";
+  pop.setAttribute("role", "dialog");
+  document.body.appendChild(pop);
+
+  function closePop() {
+    if (!pop) return;
+    pop.classList.remove("show");
+    if (openBtn) { openBtn.setAttribute("aria-expanded", "false"); openBtn = null; }
+  }
+  function openPop(btn, term) {
+    var g = GLOSSARY[term];
+    if (!g) return;
+    pop.innerHTML = '<button type="button" class="close" aria-label="Schließen">&times;</button>' +
+      "<h4>" + g.t + "</h4><p>" + g.d + "</p>";
+    pop.classList.add("show");
+    var r = btn.getBoundingClientRect();
+    var pw = pop.offsetWidth, ph = pop.offsetHeight;
+    var left = Math.min(Math.max(8, r.left - 4), window.innerWidth - pw - 8);
+    var top = r.bottom + 8;
+    if (top + ph + 8 > window.innerHeight && r.top - ph - 8 > 8) top = r.top - ph - 8;
+    pop.style.left = Math.round(left) + "px";
+    pop.style.top = Math.round(top) + "px";
+    btn.setAttribute("aria-expanded", "true");
+    openBtn = btn;
+  }
+
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest ? e.target.closest(".info") : null;
+    if (btn) {
+      e.preventDefault(); e.stopPropagation();
+      if (openBtn === btn) closePop();
+      else openPop(btn, btn.getAttribute("data-term"));
+      return;
+    }
+    if (pop.contains(e.target)) { if (e.target.closest(".close")) closePop(); return; }
+    closePop();
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closePop(); });
+  window.addEventListener("resize", closePop);
+  window.addEventListener("scroll", closePop, true);
+
+  /* Info-Buttons in die Eingabe-Labels einsetzen */
+  ["eigenkapital", "budget", "kaufpreis", "bundesland", "grest", "notar", "makler",
+   "zins", "tilgung", "foerderBetrag", "foerderZins", "zuschuss", "hausgeldE",
+   "ruecklageE", "miete", "steuersatz", "nichtumlage", "afa", "grundanteil"
+  ].forEach(function (id) {
+    var el = $(id); if (!el) return;
+    var field = el.closest(".field"); if (!field) return;
+    var label = field.querySelector("label"); if (!label || label.querySelector(".info")) return;
+    label.insertAdjacentHTML("beforeend", " " + infoBtn(id));
   });
 
   /* ---------- Live-Berechnung ---------- */
