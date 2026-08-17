@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Wohnungskauf-Rechner für Deutschland: Eigenkapital, Budget, Kaufnebenkosten, Förderung und Steuer – für Eigennutzung oder Vermietung. Läuft offline im Browser.">
+<meta name="color-scheme" content="light dark">
+<title>Kann ich mir das leisten? · Wohnungsrechner</title>
+<style>
+  /* ---------- Design-Tokens: Farben, hell (Grund) ---------- */
+  :root{
+    --bg:#e9edf0;
+    --surface:#ffffff;
+    --surface-2:#f3f6f7;
+    --ink:#13232a;
+    --muted:#5a6d75;
+    --line:#d5dde1;
+    --line-strong:#c2cdd2;
+    --accent:#0d6e63;
+    --accent-ink:#0a544b;
+    --accent-soft:#d7ece8;
+    --good:#1c7a4d;
+    --good-soft:#d5eddf;
+    --warn:#a4711a;
+    --warn-soft:#f3e6cc;
+    --bad:#bd3b2e;
+    --bad-soft:#f4dad6;
+    --shadow:0 1px 2px rgba(19,35,42,.05), 0 8px 24px rgba(19,35,42,.06);
+    --radius:14px;
+    --radius-sm:9px;
+    --maxw:1120px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  /* system-Standard (kein data-theme) unter dunklem OS */
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0d1518;
+      --surface:#152025;
+      --surface-2:#1b282e;
+      --ink:#e7eef0;
+      --muted:#93a5ac;
+      --line:#26353b;
+      --line-strong:#324349;
+      --accent:#38b6a5;
+      --accent-ink:#8fe0d4;
+      --accent-soft:#123833;
+      --good:#4dc082;
+      --good-soft:#123425;
+      --warn:#e0aa47;
+      --warn-soft:#37290f;
+      --bad:#e56b5d;
+      --bad-soft:#3a1c18;
+      --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.35);
+    }
+  }
+  /* expliziter Dunkel-Umschalter gewinnt in beide Richtungen */
+  :root[data-theme="dark"]{
+    --bg:#0d1518;
+    --surface:#152025;
+    --surface-2:#1b282e;
+    --ink:#e7eef0;
+    --muted:#93a5ac;
+    --line:#26353b;
+    --line-strong:#324349;
+    --accent:#38b6a5;
+    --accent-ink:#8fe0d4;
+    --accent-soft:#123833;
+    --good:#4dc082;
+    --good-soft:#123425;
+    --warn:#e0aa47;
+    --warn-soft:#37290f;
+    --bad:#e56b5d;
+    --bad-soft:#3a1c18;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font);
+    line-height:1.5;
+    font-size:16px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+
+  /* ---------- Kopf ---------- */
+  header.top{
+    max-width:var(--maxw);margin:0 auto;padding:26px 20px 6px;
+    display:flex;align-items:flex-start;justify-content:space-between;gap:16px;
+  }
+  .brand{display:flex;flex-direction:column;gap:4px}
+  .eyebrow{
+    font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent-ink);font-weight:700;
+  }
+  h1{
+    margin:0;font-size:clamp(24px,4.2vw,34px);line-height:1.1;
+    letter-spacing:-.02em;text-wrap:balance;font-weight:800;
+  }
+  .sub{color:var(--muted);font-size:15px;max-width:60ch}
+  .theme-toggle{
+    flex:0 0 auto;background:var(--surface);border:1px solid var(--line);
+    color:var(--ink);border-radius:999px;padding:9px 14px;font-size:13px;
+    font-weight:600;cursor:pointer;display:inline-flex;gap:7px;align-items:center;
+    box-shadow:var(--shadow);
+  }
+  .theme-toggle:hover{border-color:var(--line-strong)}
+
+  /* ---------- Layout ---------- */
+  main{max-width:var(--maxw);margin:0 auto;padding:14px 20px 60px}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px;align-items:start}
+  @media (max-width:900px){ .grid{grid-template-columns:1fr} }
+
+  /* ---------- Karten ---------- */
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:18px 18px 20px;margin-bottom:18px;
+  }
+  .card > h2{
+    margin:0 0 2px;font-size:16px;font-weight:750;letter-spacing:-.01em;
+    display:flex;align-items:center;gap:9px;
+  }
+  .card > .hint{color:var(--muted);font-size:12.5px;margin:0 0 14px}
+  .step{
+    display:inline-grid;place-items:center;width:23px;height:23px;flex:0 0 auto;
+    border-radius:7px;background:var(--accent-soft);color:var(--accent-ink);
+    font-size:12.5px;font-weight:800;
+  }
+
+  /* ---------- Felder ---------- */
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:13px 14px}
+  .fields.one{grid-template-columns:1fr}
+  @media (max-width:520px){ .fields{grid-template-columns:1fr} }
+  .field{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .field.full{grid-column:1/-1}
+  label{font-size:13px;font-weight:600;color:var(--ink)}
+  label .u{color:var(--muted);font-weight:500}
+  .field .note{font-size:11.5px;color:var(--muted);line-height:1.35}
+  .inp{position:relative;display:flex;align-items:center}
+  .inp .pre,.inp .post{
+    position:absolute;color:var(--muted);font-size:14px;pointer-events:none;
+  }
+  .inp .pre{left:12px}
+  .inp .post{right:12px}
+  input[type=number],select{
+    width:100%;background:var(--surface-2);border:1px solid var(--line);
+    color:var(--ink);border-radius:var(--radius-sm);padding:11px 12px;font-size:15px;
+    font-family:inherit;font-variant-numeric:tabular-nums;outline:none;transition:border-color .12s,box-shadow .12s;
+  }
+  .inp.has-pre input{padding-left:26px}
+  .inp.has-post input{padding-right:38px}
+  input[type=number]:focus,select:focus{
+    border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  input[type=number]::-webkit-outer-spin-button,
+  input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input[type=number]{-moz-appearance:textfield}
+  select{appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%235a6d75' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+  }
+
+  /* ---------- Nutzungs-Umschalter ---------- */
+  .segmented{
+    display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--surface-2);
+    border:1px solid var(--line);border-radius:11px;padding:5px;
+  }
+  .segmented button{
+    border:0;background:transparent;color:var(--muted);font-family:inherit;
+    font-size:14px;font-weight:700;padding:10px 8px;border-radius:8px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:1px;line-height:1.2;transition:.12s;
+  }
+  .segmented button small{font-weight:500;font-size:11px}
+  .segmented button[aria-pressed="true"]{
+    background:var(--surface);color:var(--accent-ink);box-shadow:var(--shadow);
+  }
+
+  .use-block{display:none}
+  .use-block.active{display:block}
+
+  /* ---------- Ergebnis (sticky) ---------- */
+  .result-wrap{position:sticky;top:16px}
+  .verdict{
+    border-radius:var(--radius);border:1px solid var(--line);overflow:hidden;
+    box-shadow:var(--shadow);background:var(--surface);
+  }
+  .verdict .head{padding:18px 18px 16px;display:flex;flex-direction:column;gap:12px}
+  .lamp{
+    display:inline-flex;align-items:center;gap:9px;font-weight:800;font-size:13px;
+    letter-spacing:.02em;padding:7px 12px;border-radius:999px;width:max-content;
+  }
+  .lamp .dot{width:10px;height:10px;border-radius:50%}
+  .lamp.good{background:var(--good-soft);color:var(--good)} .lamp.good .dot{background:var(--good)}
+  .lamp.warn{background:var(--warn-soft);color:var(--warn)} .lamp.warn .dot{background:var(--warn)}
+  .lamp.bad{background:var(--bad-soft);color:var(--bad)} .lamp.bad .dot{background:var(--bad)}
+
+  .big{display:flex;flex-direction:column;gap:2px}
+  .big .lbl{font-size:12.5px;color:var(--muted);font-weight:600}
+  .big .val{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+  .big .val.pos{color:var(--good)} .big .val.neg{color:var(--bad)}
+  .big .cmp{font-size:12.5px;color:var(--muted)}
+
+  .verdict .body{border-top:1px solid var(--line);padding:6px 18px 10px}
+  .row{display:flex;justify-content:space-between;gap:12px;align-items:baseline;
+    padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .row:last-child{border-bottom:0}
+  .row .k{color:var(--muted)}
+  .row .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  .row.sub{padding:5px 0;font-size:12.5px}
+  .row.sub .k{padding-left:12px;position:relative}
+  .row.sub .k::before{content:"";position:absolute;left:2px;top:.55em;width:5px;height:5px;
+    border-left:1px solid var(--line-strong);border-bottom:1px solid var(--line-strong)}
+  .row.sub .v{font-weight:600;color:var(--muted)}
+  .row.total{font-size:15px}
+  .row.total .k{color:var(--ink);font-weight:700}
+  .row.total .v{font-size:16px}
+  .v.pos{color:var(--good)} .v.neg{color:var(--bad)}
+
+  .pills{display:flex;flex-wrap:wrap;gap:7px;padding:12px 18px 16px;border-top:1px solid var(--line)}
+  .pill{font-size:12px;font-weight:650;padding:5px 10px;border-radius:999px;
+    background:var(--surface-2);border:1px solid var(--line);color:var(--muted);
+    display:inline-flex;gap:6px;align-items:baseline}
+  .pill b{color:var(--ink);font-variant-numeric:tabular-nums}
+
+  /* Hinweise / Warnungen */
+  .flags{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+  .flag{display:flex;gap:9px;align-items:flex-start;font-size:12.5px;line-height:1.4;
+    padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface)}
+  .flag .ic{flex:0 0 auto;width:17px;height:17px;border-radius:5px;display:grid;place-items:center;
+    font-size:11px;font-weight:800;margin-top:1px;color:#fff}
+  .flag.info .ic{background:var(--accent)} .flag.info{border-color:var(--accent-soft)}
+  .flag.warn .ic{background:var(--warn)} .flag.warn{border-color:var(--warn-soft)}
+  .flag.bad .ic{background:var(--bad)} .flag.bad{border-color:var(--bad-soft)}
+  .flag.good .ic{background:var(--good)} .flag.good{border-color:var(--good-soft)}
+
+  .disclaimer{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:18px;
+    padding-top:14px;border-top:1px solid var(--line)}
+  footer{max-width:var(--maxw);margin:0 auto;padding:8px 20px 40px;color:var(--muted);font-size:12px}
+  footer a{color:var(--accent-ink)}
+  a.reset{color:var(--accent-ink);font-size:12.5px;text-decoration:none;font-weight:650;cursor:pointer}
+  a.reset:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <span class="eyebrow">Wohnung kaufen · Deutschland</span>
+    <h1>Kann ich mir das leisten?</h1>
+    <p class="sub">Rechne mit Eigenkapital, monatlichem Budget, Kaufneben&shy;kosten, Förderung und Steuer durch – für Eigennutzung oder Vermietung. Alles läuft offline im Browser.</p>
+  </div>
+  <button class="theme-toggle" id="themeBtn" type="button" aria-label="Hell/Dunkel umschalten">
+    <span id="themeIcon">◐</span><span id="themeLbl">Theme</span>
+  </button>
+</header>
+
+<main>
+  <div class="grid">
+    <!-- ===================== EINGABEN ===================== -->
+    <section class="inputs">
+
+      <div class="card">
+        <h2><span class="step">1</span> Dein Geld</h2>
+        <p class="hint">Was Du mitbringst und was monatlich fürs Wohnen übrig ist.</p>
+        <div class="fields">
+          <div class="field">
+            <label for="eigenkapital">Eigenkapital <span class="u">€</span></label>
+            <div class="inp has-pre"><span class="pre">€</span>
+              <input type="number" id="eigenkapital" min="0" step="1000" value="80000" inputmode="numeric"></div>
+            <span class="note">Erspartes, das Du einsetzt (inkl. Reserve besser nicht komplett leerräumen).</span>
+          </div>
+          <div class="field">
+            <label for="budget">Monatlich übrig fürs Wohnen <span class="u">€</span></label>
+            <div class="inp has-pre"><span class="pre">€</span>
+              <input type="number" id="budget" min="0" step="50" value="1400" inputmode="numeric"></div>
+            <span class="note">Was nach allen sonstigen Lebenskosten pro Monat bleibt.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="step">2</span> Objekt &amp; Kaufnebenkosten</h2>
+        <p class="hint">Der Kaufpreis plus die Nebenkosten, die Banken meist <em>nicht</em> mitfinanzieren.</p>
+        <div class="fields">
+          <div class="field">
+            <label for="kaufpreis">Kaufpreis <span class="u">€</span></label>
+            <div class="inp has-pre"><span class="pre">€</span>
+              <input type="number" id="kaufpreis" min="0" step="5000" value="380000" inputmode="numeric"></div>
+          </div>
+          <div class="field">
+            <label for="flaeche">Wohnfläche <span class="u">m²</span></label>
+            <div class="inp has-post"><span class="post">m²</span>
+              <input type="number" id="flaeche" min="0" step="1" value="75" inputmode="numeric"></div>
+            <span class="note" id="preisqm">–</span>
+          </div>
+          <div class="field full">
+            <label for="bundesland">Bundesland <span class="u">(bestimmt die Grunderwerbsteuer)</span></label>
+            <select id="bundesland"></select>
+          </div>
+          <div class="field">
+            <label for="grest">Grunderwerbsteuer <span class="u">%</span></label>
+            <div class="inp has-post"><span class="post">%</span>
+              <input type="number" id="grest" min="0" step="0.1" value="5.0" inputmode="decimal"></div>
+            <span class="note">Automatisch je Bundesland – manuell änderbar.</span>
+          </div>
+          <div class="field">
+            <label for="notar">Notar &amp; Grundbuch <span class="u">%</span></label>
+            <div class="inp has-post"><span class="post">%</span>
+              <input type="number" id="notar" min="0" step="0.1" value="2.0" inputmode="decimal"></div>
+            <span class="note">Üblich ca. 1,5 % Notar + 0,5 % Grundbuch.</span>
+          </div>
+          <div class="field">
+            <label for="makler">Maklerprovision <span class="u">%</span></label>
+            <div class="inp has-post"><span class="post">%</span>
+              <input type="number" id="makler" min="0" step="0.01" value="3.57" inputmode="decimal"></div>
+            <span class="note">Käuferanteil inkl. USt. 0 %, wenn ohne Makler.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="step">3</span> Finanzierung</h2>
+        <p class="hint">Das Bankdarlehen finanziert, was Eigenkapital und Förderung nicht decken.</p>
+        <div class="fields">
+          <div class="field">
+            <label for="zins">Sollzins p. a. <span class="u">%</span></label>
+            <div class="inp has-post"><span class="post">%</span>
+              <input type="number" id="zins" min="0" step="0.05" value="3.6" inputmode="decimal"></div>
+          </div>
+          <div class="field">
+            <label for="tilgung">Anfängliche Tilgung p. a. <span class="u">%</span></label>
+            <div class="inp has-post"><span class="post">%</span>
+              <input type="number" id="tilgung" min="0.5" step="0.1" value="2.0" inputmode="decimal"></div>
+            <span class="note">Höhere Tilgung = schneller schuldenfrei, aber höhere Rate.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="step">4</span> Förderung <span class="u" style="font-weight:500;color:var(--muted);font-size:12px">optional</span></h2>
+        <p class="hint">z. B. ein zinsgünstiges KfW-Darlehen und/oder ein einmaliger Zuschuss.</p>
+        <div class="fields">
+          <div class="field">
+            <label for="foerderBetrag">Förderdarlehen (KfW) <span class="u">€</span></label>
+            <div class="inp has-pre"><span class="pre">€</span>
+              <input type="number" id="foerderBetrag" min="0" step="1000" value="0" inputmode="numeric"></div>
+            <span class="note">Ersetzt einen Teil des Bankdarlehens zum Förderzins.</span>
+          </div>
+          <div class="field">
+            <label for="foerderZins">Förderzins p. a. <span class="u">%</span></label>
+            <div class="inp has-post"><span class="post">%</span>
+              <input type="number" id="foerderZins" min="0" step="0.05" value="2.0" inputmode="decimal"></div>
+          </div>
+          <div class="field">
+            <label for="zuschuss">Einmaliger Zuschuss <span class="u">€</span></label>
+            <div class="inp has-pre"><span class="pre">€</span>
+              <input type="number" id="zuschuss" min="0" step="500" value="0" inputmode="numeric"></div>
+            <span class="note">Tilgungszuschuss/Fördergeld, das den Kreditbedarf senkt.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2><span class="step">5</span> Wie nutzt Du die Wohnung?</h2>
+        <p class="hint">Das ändert die laufende Belastung und die steuerliche Behandlung.</p>
+        <div class="segmented" role="tablist" aria-label="Nutzung">
+          <button type="button" id="btnEigen" aria-pressed="true">Selbst einziehen<small>Eigennutzung</small></button>
+          <button type="button" id="btnVermieten" aria-pressed="false">Vermieten<small>Kapitalanlage</small></button>
+        </div>
+
+        <!-- Eigennutzung -->
+        <div class="use-block active" id="blockEigen" style="margin-top:15px">
+          <div class="fields">
+            <div class="field">
+              <label for="hausgeldE">Hausgeld / Wohngeld <span class="u">€ / Monat</span></label>
+              <div class="inp has-pre"><span class="pre">€</span>
+                <input type="number" id="hausgeldE" min="0" step="10" value="280" inputmode="numeric"></div>
+              <span class="note">Betriebskosten + Verwaltung + Rücklage der Eigentümergemeinschaft.</span>
+            </div>
+            <div class="field">
+              <label for="ruecklageE">Zusätzliche Rücklage <span class="u">€ / Monat</span></label>
+              <div class="inp has-pre"><span class="pre">€</span>
+                <input type="number" id="ruecklageE" min="0" step="10" value="60" inputmode="numeric"></div>
+              <span class="note">Puffer für Reparaturen über das Hausgeld hinaus.</span>
+            </div>
+          </div>
+          <div class="flag info" style="margin-top:13px">
+            <span class="ic">i</span>
+            <span>Bei Eigennutzung sind Zinsen <b>steuerlich nicht absetzbar</b>. Dafür ist der Wertzuwachs nach Verkauf steuerfrei (bei durchgehender Eigennutzung, sonst nach 10 Jahren).</span>
+          </div>
+        </div>
+
+        <!-- Vermietung -->
+        <div class="use-block" id="blockVermieten" style="margin-top:15px">
+          <div class="fields">
+            <div class="field">
+              <label for="miete">Kaltmiete <span class="u">€ / Monat</span></label>
+              <div class="inp has-pre"><span class="pre">€</span>
+                <input type="number" id="miete" min="0" step="10" value="1150" inputmode="numeric"></div>
+            </div>
+            <div class="field">
+              <label for="steuersatz">Persönl. Grenzsteuersatz <span class="u">%</span></label>
+              <div class="inp has-post"><span class="post">%</span>
+                <input type="number" id="steuersatz" min="0" max="50" step="1" value="42" inputmode="numeric"></div>
+              <span class="note">Dein höchster Einkommensteuersatz (Spitzensteuer 42 %).</span>
+            </div>
+            <div class="field">
+              <label for="nichtumlage">Nicht umlagefähige Kosten <span class="u">€ / Monat</span></label>
+              <div class="inp has-pre"><span class="pre">€</span>
+                <input type="number" id="nichtumlage" min="0" step="10" value="90" inputmode="numeric"></div>
+              <span class="note">Verwaltung + Rücklage, die Du <em>nicht</em> auf Mieter umlegen kannst.</span>
+            </div>
+            <div class="field">
+              <label for="afa">Abschreibung (AfA) <span class="u">%</span></label>
+              <select id="afa">
+                <option value="2">2 % linear – Baujahr ab 1925</option>
+                <option value="2.5">2,5 % linear – Baujahr vor 1925</option>
+                <option value="3">3 % – Neubau (ab 2023)</option>
+              </select>
+              <span class="note">Jährliche Abschreibung des Gebäudeanteils.</span>
+            </div>
+            <div class="field">
+              <label for="grundanteil">Grundstücksanteil <span class="u">% vom Preis</span></label>
+              <div class="inp has-post"><span class="post">%</span>
+                <input type="number" id="grundanteil" min="0" max="90" step="5" value="20" inputmode="numeric"></div>
+              <span class="note">Boden wird nicht abgeschrieben – nur das Gebäude.</span>
+            </div>
+          </div>
+          <div class="flag info" style="margin-top:13px">
+            <span class="ic">i</span>
+            <span>Bei Vermietung mindern <b>Zinsen, AfA</b> und Bewirtschaftungskosten Deine Steuer. Verkauf ist nach <b>10 Jahren</b> Haltedauer steuerfrei (Spekulationsfrist).</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;padding:0 4px">
+        <a class="reset" id="resetBtn">↺ Auf Beispielwerte zurücksetzen</a>
+      </div>
+    </section>
+
+    <!-- ===================== ERGEBNIS ===================== -->
+    <aside class="result-wrap" aria-live="polite">
+      <div class="verdict">
+        <div class="head">
+          <span class="lamp" id="lamp"><span class="dot"></span><span id="lampTxt">–</span></span>
+          <div class="big">
+            <span class="lbl" id="bigLbl">Monatliche Belastung</span>
+            <span class="val num" id="bigVal">–</span>
+            <span class="cmp" id="bigCmp">–</span>
+          </div>
+        </div>
+        <div class="body" id="breakdown"></div>
+        <div class="pills" id="pills"></div>
+      </div>
+
+      <div class="flags" id="flags"></div>
+
+      <p class="disclaimer">Grobe Orientierung, keine Steuer- oder Finanzberatung. Zinsen sinken über die Laufzeit (die Rate bleibt, der Zinsanteil fällt) – hier wird das <b>erste Jahr</b> als Momentaufnahme gerechnet. Grunderwerbsteuersätze Stand 2025. Prüfe konkrete Konditionen mit Bank, Steuerberatung und Förderstelle (z. B. KfW).</p>
+    </aside>
+  </div>
+</main>
+
+<footer>
+  Rechnet vollständig offline im Browser – keine Eingaben werden übertragen oder gespeichert.
+</footer>
+<script>
+"use strict";
+(function () {
+  /* ---------- Grunderwerbsteuer je Bundesland (Stand 2025, %) ---------- */
+  var LAENDER = [
+    ["Baden-Württemberg", 5.0], ["Bayern", 3.5], ["Berlin", 6.0],
+    ["Brandenburg", 6.5], ["Bremen", 5.0], ["Hamburg", 5.5],
+    ["Hessen", 6.0], ["Mecklenburg-Vorpommern", 6.0], ["Niedersachsen", 5.0],
+    ["Nordrhein-Westfalen", 6.5], ["Rheinland-Pfalz", 5.0], ["Saarland", 6.5],
+    ["Sachsen", 5.5], ["Sachsen-Anhalt", 5.0], ["Schleswig-Holstein", 6.5],
+    ["Thüringen", 5.0]
+  ];
+
+  var euro = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+  var euro2 = new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+  var pct = new Intl.NumberFormat("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+
+  var $ = function (id) { return document.getElementById(id); };
+  function n(id) { var v = parseFloat($(id).value); return isFinite(v) ? v : 0; }
+
+  var DEFAULTS = {
+    eigenkapital: 80000, budget: 1400, kaufpreis: 380000, flaeche: 75,
+    grest: 5.0, notar: 2.0, makler: 3.57, zins: 3.6, tilgung: 2.0,
+    foerderBetrag: 0, foerderZins: 2.0, zuschuss: 0,
+    hausgeldE: 280, ruecklageE: 60,
+    miete: 1150, steuersatz: 42, nichtumlage: 90, grundanteil: 20
+  };
+
+  var mode = "eigen"; // "eigen" | "vermieten"
+
+  /* ---------- Bundesland-Auswahl aufbauen ---------- */
+  var sel = $("bundesland");
+  LAENDER.forEach(function (l, i) {
+    var o = document.createElement("option");
+    o.value = String(i); o.textContent = l[0] + " (" + pct.format(l[1]) + " %)";
+    sel.appendChild(o);
+  });
+  sel.value = "8";  // Niedersachsen (5,0 %) als neutraler Start
+  sel.addEventListener("change", function () {
+    $("grest").value = String(LAENDER[+sel.value][1]);
+    compute();
+  });
+
+  /* ---------- Nutzungs-Umschalter ---------- */
+  function setMode(m) {
+    mode = m;
+    var eigen = m === "eigen";
+    $("btnEigen").setAttribute("aria-pressed", eigen ? "true" : "false");
+    $("btnVermieten").setAttribute("aria-pressed", eigen ? "false" : "true");
+    $("blockEigen").classList.toggle("active", eigen);
+    $("blockVermieten").classList.toggle("active", !eigen);
+    compute();
+  }
+  $("btnEigen").addEventListener("click", function () { setMode("eigen"); });
+  $("btnVermieten").addEventListener("click", function () { setMode("vermieten"); });
+
+  /* ---------- Theme-Umschalter ---------- */
+  var root = document.documentElement;
+  function currentTheme() {
+    var t = root.getAttribute("data-theme");
+    if (t) return t;
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  }
+  function paintThemeBtn() {
+    var dark = currentTheme() === "dark";
+    $("themeIcon").textContent = dark ? "☾" : "☀";
+    $("themeLbl").textContent = dark ? "Dunkel" : "Hell";
+  }
+  $("themeBtn").addEventListener("click", function () {
+    root.setAttribute("data-theme", currentTheme() === "dark" ? "light" : "dark");
+    paintThemeBtn();
+  });
+  if (window.matchMedia) {
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", paintThemeBtn);
+  }
+  paintThemeBtn();
+
+  /* ---------- Helfer: Zeile rendern ---------- */
+  function row(k, v, cls, sub) {
+    var extra = cls ? (" " + cls) : "";
+    return '<div class="row' + (sub ? " sub" : "") + (cls === "total" ? " total" : "") + '">' +
+      '<span class="k">' + k + '</span><span class="v' + (cls && cls !== "total" ? " " + cls : "") + '">' + v + '</span></div>';
+  }
+  function pill(label, val) {
+    return '<span class="pill">' + label + ' <b>' + val + '</b></span>';
+  }
+  function flag(type, txt) {
+    var icon = type === "bad" ? "!" : type === "warn" ? "!" : type === "good" ? "✓" : "i";
+    return '<div class="flag ' + type + '"><span class="ic">' + icon + '</span><span>' + txt + '</span></div>';
+  }
+
+  /* ---------- Kernberechnung ---------- */
+  function compute() {
+    var kaufpreis = n("kaufpreis");
+    var ek = n("eigenkapital");
+    var budget = n("budget");
+    var flaeche = n("flaeche");
+
+    // Preis / m²
+    $("preisqm").textContent = (flaeche > 0 && kaufpreis > 0)
+      ? euro.format(kaufpreis / flaeche) + " / m²" : "–";
+
+    // Nebenkosten
+    var grestR = n("grest") / 100, notarR = n("notar") / 100, maklerR = n("makler") / 100;
+    var grest = kaufpreis * grestR;
+    var notar = kaufpreis * notarR;
+    var makler = kaufpreis * maklerR;
+    var nebenkosten = grest + notar + makler;
+    var nebenR = kaufpreis > 0 ? nebenkosten / kaufpreis : 0;
+    var gesamtkosten = kaufpreis + nebenkosten;
+
+    // Förderung
+    var zuschuss = n("zuschuss");
+    var foerderMax = n("foerderBetrag");
+
+    // Finanzierungsbedarf
+    var bedarf = Math.max(0, gesamtkosten - ek - zuschuss);
+    var foerderDarlehen = Math.min(foerderMax, bedarf);
+    var bankDarlehen = Math.max(0, bedarf - foerderDarlehen);
+
+    // Raten (Annuität: Anfangsrate = Restschuld × (Zins + Tilgung))
+    var tilgR = n("tilgung") / 100;
+    var zinsR = n("zins") / 100, foerdZinsR = n("foerderZins") / 100;
+    var rateBank = bankDarlehen * (zinsR + tilgR) / 12;
+    var rateFoerd = foerderDarlehen * (foerdZinsR + tilgR) / 12;
+    var rate = rateBank + rateFoerd;
+
+    // Zinsanteil 1. Jahr (für Steuer + Info)
+    var zinsenJahr = bankDarlehen * zinsR + foerderDarlehen * foerdZinsR;
+    var zinsMonat = zinsenJahr / 12;
+
+    // Beleihung
+    var ltv = kaufpreis > 0 ? (bedarf / kaufpreis) * 100 : 0;
+
+    var lamp = $("lamp"), lampTxt = $("lampTxt");
+    var bigLbl = $("bigLbl"), bigVal = $("bigVal"), bigCmp = $("bigCmp");
+    var bd = $("breakdown"), pills = $("pills"), flags = $("flags");
+    var lampClass, lampWord, flagsHtml = "";
+
+    function common_flags() {
+      var h = "";
+      if (ek < nebenkosten) {
+        h += flag("warn", "Dein Eigenkapital (" + euro.format(ek) + ") deckt nicht einmal die Kaufnebenkosten (" +
+          euro.format(nebenkosten) + "). Banken finanzieren die Nebenkosten selten mit – hier fehlt Eigenkapital.");
+      } else if (ek < nebenkosten + kaufpreis * 0.10) {
+        h += flag("info", "Faustregel: Eigenkapital sollte Nebenkosten <b>plus rund 10–20 % des Kaufpreises</b> decken. Mehr Eigenkapital senkt den Zins.");
+      }
+      if (ltv > 100) {
+        h += flag("warn", "Beleihung über 100 % des Kaufpreises – solche Vollfinanzierungen bekommen meist deutlich höhere Zinsen (oder werden abgelehnt).");
+      } else if (ltv > 90 && bedarf > 0) {
+        h += flag("info", "Beleihung " + Math.round(ltv) + " % – über 80–90 % steigen die Zinsen meist spürbar an.");
+      }
+      if (bedarf === 0 && kaufpreis > 0) {
+        h += flag("good", "Eigenkapital (+ Zuschuss) deckt den kompletten Kaufpreis inkl. Nebenkosten – Du bräuchtest keinen Kredit.");
+      }
+      return h;
+    }
+
+    if (mode === "eigen") {
+      var hausgeld = n("hausgeldE"), ruecklage = n("ruecklageE");
+      var belastung = rate + hausgeld + ruecklage;
+      var puffer = budget - belastung;
+
+      bigLbl.textContent = "Monatliche Belastung";
+      bigVal.textContent = euro.format(belastung);
+      bigVal.className = "val num";
+      bigCmp.innerHTML = puffer >= 0
+        ? "Budget " + euro.format(budget) + " → <b style='color:var(--good)'>" + euro.format(puffer) + " Puffer</b>"
+        : "Budget " + euro.format(budget) + " → <b style='color:var(--bad)'>" + euro.format(-puffer) + " zu wenig</b>";
+
+      if (puffer < 0) { lampClass = "bad"; lampWord = "Zu teuer fürs Budget"; }
+      else if (puffer < belastung * 0.12) { lampClass = "warn"; lampWord = "Knapp – wenig Puffer"; }
+      else { lampClass = "good"; lampWord = "Leistbar"; }
+
+      bd.innerHTML =
+        row("Kreditrate (Zins + Tilgung)", euro.format(rate)) +
+        row("davon Zinsen (1. Jahr)", euro.format(zinsMonat), null, true) +
+        row("davon Tilgung → Dein Vermögen", euro.format(rate - zinsMonat), "pos", true) +
+        row("Hausgeld / Wohngeld", euro.format(hausgeld)) +
+        row("Zusätzliche Rücklage", euro.format(ruecklage)) +
+        row("Monatliche Belastung", euro.format(belastung), "total");
+
+      pills.innerHTML =
+        pill("Kredit", euro.format(bedarf)) +
+        pill("Nebenkosten", euro.format(nebenkosten)) +
+        pill("Beleihung", Math.round(ltv) + " %") +
+        (flaeche > 0 ? pill("Preis/m²", euro.format(kaufpreis / flaeche)) : "");
+
+      flagsHtml = common_flags();
+      flagsHtml += flag("info", "Die Tilgung ist keine „verlorene“ Ausgabe – sie baut Dein Vermögen auf. Rein für die Wohnkosten zählt eher der Zinsanteil (" + euro.format(zinsMonat) + "/Monat) plus Hausgeld.");
+      // Orientierung: leistbarer Kaufpreis
+      var payAvail = budget - hausgeld - ruecklage;
+      if (payAvail > 0 && (zinsR + tilgR) > 0) {
+        var maxLoan = payAvail * 12 / (zinsR + tilgR);
+        var maxPreis = (maxLoan + ek + zuschuss) / (1 + nebenR);
+        if (maxPreis > 0) {
+          flagsHtml += flag(maxPreis >= kaufpreis ? "good" : "warn",
+            "Orientierung: Mit Deinem Budget und Eigenkapital wären grob bis <b>" + euro.format(maxPreis) +
+            "</b> Kaufpreis tragbar (gleiche Zins-/Tilgungs- und Hausgeld-Annahmen).");
+        }
+      } else if (payAvail <= 0) {
+        flagsHtml += flag("bad", "Schon Hausgeld und Rücklage übersteigen Dein monatliches Budget – für die Kreditrate bleibt nichts übrig.");
+      }
+
+    } else {
+      /* -------- Vermietung -------- */
+      var miete = n("miete");
+      var stSatz = n("steuersatz") / 100;
+      var nichtumlage = n("nichtumlage");
+      var afaR = parseFloat($("afa").value) / 100;
+      var grundR = n("grundanteil") / 100;
+
+      // AfA-Bemessung: Gebäudeanteil der Anschaffungskosten (inkl. Nebenkosten, ohne Makler? – vereinfachend inkl.)
+      var gebaeudeBasis = gesamtkosten * (1 - grundR);
+      var afaJahr = gebaeudeBasis * afaR;
+      var afaMonat = afaJahr / 12;
+
+      // Steuerliches Ergebnis (Jahr)
+      var mieteJahr = miete * 12;
+      var werbungskosten = zinsenJahr + afaJahr + nichtumlage * 12;
+      var steuerErgebnis = mieteJahr - werbungskosten;      // + = Gewinn, - = Verlust
+      var steuer = steuerErgebnis * stSatz;                  // + = zahlen, - = Erstattung
+      var steuerMonat = steuer / 12;
+
+      // Cashflow (Kasse): Miete - Rate - nicht umlagefähig - Steuer
+      var cashflow = miete - rate - nichtumlage - steuerMonat;
+      var eigenaufwand = -cashflow; // >0 = musst Du zuschießen
+
+      bigLbl.textContent = eigenaufwand > 0 ? "Monatlicher Zuschuss nötig" : "Monatlicher Überschuss";
+      bigVal.textContent = euro.format(Math.abs(eigenaufwand));
+      bigVal.className = "val num " + (eigenaufwand > 0 ? "neg" : "pos");
+      bigCmp.innerHTML = eigenaufwand > 0
+        ? "Aus Deinem Budget (" + euro.format(budget) + ") gedeckt: <b style='color:" +
+          (eigenaufwand <= budget ? "var(--good)" : "var(--bad)") + "'>" +
+          (eigenaufwand <= budget ? "ja" : "nein") + "</b>"
+        : "Die Wohnung <b style='color:var(--good)'>trägt sich selbst</b> und wirft Cash ab.";
+
+      if (eigenaufwand <= 0) { lampClass = "good"; lampWord = "Trägt sich selbst"; }
+      else if (eigenaufwand <= budget * 0.5) { lampClass = "warn"; lampWord = "Zuschuss nötig – im Rahmen"; }
+      else if (eigenaufwand <= budget) { lampClass = "warn"; lampWord = "Hoher Zuschuss nötig"; }
+      else { lampClass = "bad"; lampWord = "Zuschuss über Budget"; }
+
+      var bruttoRendite = kaufpreis > 0 ? (mieteJahr / kaufpreis) * 100 : 0;
+      var nettoRendite = gesamtkosten > 0 ? ((mieteJahr - nichtumlage * 12) / gesamtkosten) * 100 : 0;
+
+      bd.innerHTML =
+        row("Kaltmiete (Einnahme)", euro.format(miete), "pos") +
+        row("Kreditrate (Zins + Tilgung)", "−" + euro.format(rate)) +
+        row("davon Tilgung → Dein Vermögen", euro.format(rate - zinsMonat), "pos", true) +
+        row("Nicht umlagefähige Kosten", "−" + euro.format(nichtumlage)) +
+        row("Steuer" + (steuerMonat < 0 ? "-Erstattung" : ""),
+          (steuerMonat < 0 ? "+" : "−") + euro.format(Math.abs(steuerMonat)),
+          steuerMonat < 0 ? "pos" : "neg") +
+        row(eigenaufwand > 0 ? "Dein Zuschuss / Monat" : "Dein Überschuss / Monat",
+          (eigenaufwand > 0 ? "−" : "+") + euro.format(Math.abs(eigenaufwand)), "total");
+
+      pills.innerHTML =
+        pill("Bruttorendite", pct.format(bruttoRendite) + " %") +
+        pill("Nettorendite", pct.format(nettoRendite) + " %") +
+        pill("Kredit", euro.format(bedarf)) +
+        pill("Beleihung", Math.round(ltv) + " %");
+
+      flagsHtml = common_flags();
+      flagsHtml += flag("info",
+        "Steuerlich absetzbar pro Jahr: Zinsen " + euro.format(zinsenJahr) + " + AfA " + euro.format(afaJahr) +
+        " + Kosten " + euro.format(nichtumlage * 12) + " = " + euro.format(werbungskosten) +
+        ". " + (steuerErgebnis < 0
+          ? "Der steuerliche <b>Verlust</b> von " + euro.format(-steuerErgebnis) + "/Jahr senkt Deine Steuer um ~" + euro.format(-steuer) + "."
+          : "Steuerpflichtiger <b>Überschuss</b> " + euro.format(steuerErgebnis) + "/Jahr → ~" + euro.format(steuer) + " Steuer."));
+      flagsHtml += flag("info",
+        "Die Tilgung (" + euro.format(rate - zinsMonat) + "/Monat) ist Vermögensaufbau, kein echter Verlust. „Vor Tilgung“ liegt der Cashflow bei " +
+        euro.format(cashflow + (rate - zinsMonat)) + "/Monat.");
+      if (bruttoRendite < 3 && kaufpreis > 0) {
+        flagsHtml += flag("warn", "Bruttomietrendite unter 3 % – bei diesen Zinsen zahlst Du langfristig drauf, die Wette läuft dann v. a. auf Wertsteigerung.");
+      }
+    }
+
+    // Ampel setzen
+    lamp.className = "lamp " + lampClass;
+    lampTxt.textContent = lampWord;
+    flags.innerHTML = flagsHtml;
+  }
+
+  /* ---------- Reset ---------- */
+  $("resetBtn").addEventListener("click", function () {
+    Object.keys(DEFAULTS).forEach(function (k) { if ($(k)) $(k).value = DEFAULTS[k]; });
+    $("afa").value = "2";
+    sel.value = "8";
+    setMode("eigen");
+  });
+
+  /* ---------- Live-Berechnung ---------- */
+  document.querySelectorAll("input, select").forEach(function (el) {
+    el.addEventListener("input", compute);
+  });
+
+  compute();
+})();
+</script>
+</body>
+</html>
